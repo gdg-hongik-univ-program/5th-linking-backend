@@ -1,6 +1,7 @@
 pluginManagement {
     repositories {
-        mavenCentral() // 이걸 가장 위에 추가해서 직접 다운로드하게 유도
+        // Maven Central 대신 구글 미러 주소 사용 (차단 우회)
+        maven { url 'https://maven-central.storage-download.googleapis.com/maven2/' }
         gradlePluginPortal()
     }
 }
@@ -8,7 +9,8 @@ pluginManagement {
 dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     repositories {
-        mavenCentral()
+        // 여기도 구글 미러 주소 적용
+        maven { url 'https://maven-central.storage-download.googleapis.com/maven2/' }
     }
 }
 
