@@ -15,7 +15,7 @@ public class UserRepository {
 
 
 
-    public void register(User user){
+    public void save(User user){
 
         em.persist(user);
 
