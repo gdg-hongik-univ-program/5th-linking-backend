@@ -1,1 +1,15 @@
-rootProject.name = 'linking'
+pluginManagement {
+    repositories {
+        mavenCentral() // 이걸 가장 위에 추가해서 직접 다운로드하게 유도
+        gradlePluginPortal()
+    }
+}
+
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    repositories {
+        mavenCentral()
+    }
+}
+
+rootProject.name = 'linking'ㅌ
