@@ -7,7 +7,6 @@ spring:
     url: jdbc:mysql://gdg-5th-linking-db.clm2ko6ggpgl.ap-northeast-2.rds.amazonaws.com:3306/linking?serverTimezone=Asia/Seoul&useSSL=false&allowPublicKeyRetrieval=true
     username: admin
     password: ${RDS_PASSWORD}
-
   jpa:
     hibernate:
       ddl-auto: update # 엔티티 수정을 DB 테이블에 자동으로 반영해줍니다.
@@ -15,3 +14,4 @@ spring:
     properties:
       hibernate:
         format_sql: true
+
