@@ -38,6 +38,24 @@ public class UserController {
     }
 
 
+    @PostMapping("/user/dup")
+    @Operation(
+            summary = "아이디 중복 확인로직",
+            description = "기존 아이디 값과 중복되는지 확인합니다"
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "회원가입 성공"),
+            @ApiResponse(responseCode = "409", description = "이미 존재하는 아이디")
+    })
+    public ResponseEntity<Boolean> dup(@RequestBody String id){
+
+
+        Boolean exist = userService.findById(id);
+
+        return ResponseEntity.ok(exist);
+    }
+
+
     @PostMapping("sign-up")
     @Operation(
             summary = "회원가입",
