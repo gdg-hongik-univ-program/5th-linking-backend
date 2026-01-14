@@ -23,7 +23,7 @@ public class UserRepository {
 
     public User findByLoginId(String loginId) {
         List<User> result = em.createQuery(
-                "SELECT u FROM User u WHERE u.login_id = :loginId", User.class
+                "SELECT u FROM User u WHERE u.loginId = :loginId", User.class
         ).setParameter("loginId",loginId).getResultList();
 
         return result.isEmpty() ? null : result.get(0);
@@ -32,7 +32,7 @@ public class UserRepository {
 
     public User findByIdAndPassword(String loginId, String password) {
         List<User> result = em.createQuery(
-                "SELECT u FROM User u WHERE u.login_id = :loginId AND u.password = :password",User.class)
+                "SELECT u FROM User u WHERE u.loginId = :loginId AND u.password = :password",User.class)
                 .setParameter("loginId",loginId)
                 .setParameter("password",password)
                 .getResultList();

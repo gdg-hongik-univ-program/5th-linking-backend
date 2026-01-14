@@ -9,7 +9,7 @@ spring:
     #url: jdbc:mysql://gdg-5th-linking-db.clm2ko6ggpgl.ap-northeast-2.rds.amazonaws.com:3306/linking?serverTimezone=Asia/Seoul&useSSL=false&allowPublicKeyRetrieval=true
     #username: admin
     #password: ${RDS_PASSWORD}
-    url: jdbc:mysql://localhost:3306/mydb?serverTimezone=Asia/Seoul&useSSL=false&allowPublicKeyRetrieval=true
+    url: jdbc:mysql://localhost:3306/db?serverTimezone=Asia/Seoul&useSSL=false&allowPublicKeyRetrieval=true
     username: root
     password: 1234
 
