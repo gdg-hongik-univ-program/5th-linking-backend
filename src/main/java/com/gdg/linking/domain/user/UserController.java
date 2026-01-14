@@ -87,20 +87,9 @@ public class UserController {
     public ResponseEntity<UserLoginResponse> signIn(@RequestBody UserLoginRequest request,
                                                     HttpSession session){
 
-
-
         UserLoginResponse result = userService.login(request);
-        if(result.isAdmin()){
 
-            //어드민 세션 추가
-            setLoginAdminId(session, request.getLoginId());
-
-        } else{
-
-            //유저 세션 추가
-            setLoginUserId(session,request.getLoginId());
-
-        }
+        session.setAttribute("LOGIN_USER_ID", result.getUserId());
 
         return ResponseEntity.ok(result);
 

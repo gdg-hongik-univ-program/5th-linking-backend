@@ -1,6 +1,5 @@
 package com.gdg.linking.domain.user;
 
-import com.gdg.linking.domain.user.dto.User;
 import com.gdg.linking.domain.user.dto.request.UserCreateRequest;
 import com.gdg.linking.domain.user.dto.request.UserLoginRequest;
 import com.gdg.linking.domain.user.dto.response.UserCreateResponse;
@@ -56,7 +55,7 @@ public class UserServiceImpl implements UserService{
             throw new BadRequestException(ErrorMessage.MEMBER_NOTFOUND);
         }
 
-        UserLoginResponse response = new UserLoginResponse(user.getLoginId(),user.isAdmin());
+        UserLoginResponse response = new UserLoginResponse(user.getUserId(), user.getLoginId(),user.isAdmin());
 
         return response;
     }
