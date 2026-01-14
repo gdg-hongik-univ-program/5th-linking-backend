@@ -1,4 +1,4 @@
-package com.gdg.linking.domain.user.dto;
+package com.gdg.linking.domain.user;
 
 
 import jakarta.persistence.*;

@@ -11,6 +11,8 @@ import lombok.Setter;
 @Schema(description = "로그인 응답 객체")
 public class UserLoginResponse {
 
+    private Long userId;
+
     @Schema(description = "로그인 아이디", example = "ss1234")
     private String loginId;
 
