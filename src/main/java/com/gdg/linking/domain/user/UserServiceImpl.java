@@ -34,6 +34,7 @@ public class UserServiceImpl implements UserService{
                 .password(encryptPassword)
                 .email(request.getEmail())
                 .nickName(request.getNickName())
+                .isAdmin(false)
                 .build();
 
         userRepository.save(user);

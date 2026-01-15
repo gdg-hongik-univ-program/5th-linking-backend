@@ -2,6 +2,7 @@ package com.gdg.linking.domain.user;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
+import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -22,6 +23,11 @@ public class UserRepository {
 
     public User findById(Long userId) {
         return em.find(User.class, userId);
+    }
+
+
+    public User getReferenceById(Long userId) {
+        return em.getReference(User.class, userId);
     }
 
     public User findByLoginId(String loginId) {

@@ -45,7 +45,7 @@ public class LoginCheckAspect {
             throw new HttpStatusCodeException(HttpStatus.UNAUTHORIZED, "No session") {};
         }
 
-        String userId;
+        Long userId;
         switch(loginCheck.type()) {
 
             case USER -> userId = SessionUtil.getLoginUserId(session);

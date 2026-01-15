@@ -3,6 +3,8 @@ package com.gdg.linking.domain.item;
 import com.gdg.linking.domain.user.User;
 import jakarta.persistence.*;
 import lombok.*;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDate;
 
@@ -13,7 +15,12 @@ import java.time.LocalDate;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
+@EntityListeners(AuditingEntityListener.class)
 public class Item {
+
+    public enum ItemStatus {
+        ACTIVE, COMPLETED, TRASH
+    }
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -21,7 +28,7 @@ public class Item {
     private Long itemId;
 
 
-    @OneToOne(fetch = FetchType.LAZY) // 지연 로딩 설정 (성능 최적화)
+    @ManyToOne(fetch = FetchType.LAZY) // 지연 로딩 설정 (성능 최적화)
     @JoinColumn(name = "user_id") // 실제 DB 컬럼명 설정 및 필수값 지정
     private User user;
 
@@ -56,17 +63,33 @@ public class Item {
     private LocalDate deadline;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "status", nullable = false)
+    @Column(name = "status")
     private ItemStatus status = ItemStatus.ACTIVE;
 
     @Column(name = "deleted_at")
     private LocalDate deletedAt;
 
+    @CreatedDate
     @Column(name = "created_at")
     private LocalDate createdAt;
 
 
-    public enum ItemStatus {
-        ACTIVE, COMPLETED, TRASH
+
+    //업데이트 전용 메서드
+    public void update(String url, String title, String memo, boolean importance, LocalDate deadline) {
+    this.url = url;
+    this.title = title;
+    this.memo = memo;
+    this.importance = importance;
+    this.deadline = deadline;
     }
+
+    //상태 변경 전용 메서드
+    public void updateStatus(ItemStatus status) {
+        this.status = status;
+        if (status == ItemStatus.TRASH) {
+            this.deletedAt = LocalDate.now();
+        }
+    }
+
 }
