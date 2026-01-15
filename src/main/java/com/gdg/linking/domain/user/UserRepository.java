@@ -1,6 +1,5 @@
 package com.gdg.linking.domain.user;
 
-import com.gdg.linking.domain.user.dto.User;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import org.springframework.stereotype.Repository;
@@ -19,6 +18,10 @@ public class UserRepository {
 
         em.persist(user);
 
+    }
+
+    public User findById(Long userId) {
+        return em.find(User.class, userId);
     }
 
     public User findByLoginId(String loginId) {
