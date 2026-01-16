@@ -39,4 +39,6 @@ public class ItemGetResponse {
     @Schema(description = "완료 및 리마인드 기한", example = "2026-01-20")
     private LocalDate deadline;
 
+
+
 }

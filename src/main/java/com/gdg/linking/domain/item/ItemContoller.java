@@ -9,6 +9,8 @@ import com.gdg.linking.domain.item.dto.response.ItemGetResponse;
 import com.gdg.linking.domain.item.dto.response.ItemUpdateResponse;
 import com.gdg.linking.global.aop.LoginCheck;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -130,5 +132,26 @@ public class ItemContoller {
     }
 
 
+    @LoginCheck
+    @Operation(
+            summary = "폴더별 아이템 목록 조회",
+            description = "특정 폴더(folderId)에 속한 모든 아이템 리스트를 가져옵니다. 로그인한 사용자의 권한 확인이 필요합니다."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "조회 성공",
+                    content = @Content(array = @ArraySchema(schema = @Schema(implementation = ItemGetResponse.class)))),
+            @ApiResponse(responseCode = "401", description = "인증 실패 (로그인 필요)"),
+            @ApiResponse(responseCode = "404", description = "존재하지 않는 폴더 ID"),
+            @ApiResponse(responseCode = "500", description = "서버 오류")
+    })
+    @GetMapping("/{folderId}")
+    public ResponseEntity<List<ItemGetResponse>> getFolderItem(@PathVariable Long folderId,
+                                                               @Parameter(hidden = true) HttpSession session){
+
+        Long userId = getLoginUserId(session);
+        List<ItemGetResponse> response = itemService.getByFolderId(folderId);
+
+        return ResponseEntity.ok(response);
+    }
 
 }
