@@ -11,12 +11,12 @@ public class SessionUtil {
     public SessionUtil(){
 
     }
-    public static String getLoginUserId(HttpSession session){
-        return (String) session.getAttribute(LOGIN_USER_ID);
+    public static Long getLoginUserId(HttpSession session){
+        return (Long) session.getAttribute(LOGIN_USER_ID);
     }
 
-    public static String getLoginAdminId(HttpSession session){
-        return (String) session.getAttribute(LOGIN_ADMIN_ID);
+    public static Long getLoginAdminId(HttpSession session){
+        return (Long) session.getAttribute(LOGIN_ADMIN_ID);
     }
 
     public static void setLoginUserId(HttpSession session,String id){
