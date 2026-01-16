@@ -1,5 +1,6 @@
 package com.gdg.linking.domain.item;
 
+import com.gdg.linking.domain.folder.Folder;
 import com.gdg.linking.domain.user.User;
 import jakarta.persistence.*;
 import lombok.*;
@@ -32,10 +33,9 @@ public class Item {
     @JoinColumn(name = "user_id") // 실제 DB 컬럼명 설정 및 필수값 지정
     private User user;
 
-        //폴더기능 미완성
-//    @ManyToOne(fetch = FetchType.LAZY)
-//    @JoinColumn(name = "folder_id")
-//    private Long folderId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "folder_id")
+    private Folder folder;
     
     //태그기능 미완성
 //    @ManyToMany

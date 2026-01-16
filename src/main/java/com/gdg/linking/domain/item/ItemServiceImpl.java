@@ -1,5 +1,7 @@
 package com.gdg.linking.domain.item;
 
+import com.gdg.linking.domain.folder.Folder;
+import com.gdg.linking.domain.folder.FolderRepository;
 import com.gdg.linking.domain.item.dto.request.ItemCreateRequest;
 import com.gdg.linking.domain.item.dto.request.ItemUpdateRequest;
 import com.gdg.linking.domain.item.dto.response.ItemCreateResponse;
@@ -29,6 +31,8 @@ public class ItemServiceImpl implements ItemService{
 
     private final ItemRepository itemRepository;
 
+    private final FolderRepository folderRepository;
+
     @Override
     @Transactional
     public ItemCreateResponse createItem(ItemCreateRequest request,Long userId) {
@@ -36,10 +40,12 @@ public class ItemServiceImpl implements ItemService{
 
         // 1. 유저 객체의 프록시(가짜 객체)를 가져옴 (DB 쿼리 안 나감)
         User user = userRepository.getReferenceById(userId);
+        Folder folder = folderRepository.getReferenceById(request.getFolderId());
 
         //폴더 Id 추가 아직 안했음
         Item item = Item.builder()
                 .user(user)
+                .folder(folder)
                 .url(request.getUrl())
                 .title(request.getTitle())
                 .memo(request.getMemo())
@@ -52,8 +58,8 @@ public class ItemServiceImpl implements ItemService{
         // 4. 저장된 정보를 바탕으로 Response 객체 생성 및 반환
         return new ItemCreateResponse(
                 savedItem.getItemId(),
+                savedItem.getFolder(),
                 savedItem.getTitle(),
-                null, // 아직 폴더 기능을 구현하지 않았으므로 null 전달
                 savedItem.getMemo(),
                 savedItem.isImportance(),
                 savedItem.getDeadline()

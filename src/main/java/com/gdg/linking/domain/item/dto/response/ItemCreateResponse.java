@@ -1,5 +1,6 @@
 package com.gdg.linking.domain.item.dto.response;
 
+import com.gdg.linking.domain.folder.Folder;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -30,4 +31,7 @@ public class ItemCreateResponse {
 
         @Schema(description = "설정된 마감 기한", example = "2026-01-20")
         private LocalDate deadline;
+
+    public ItemCreateResponse(Long itemId, Folder folder, String title, String memo, boolean importance, LocalDate deadline) {
+    }
 }

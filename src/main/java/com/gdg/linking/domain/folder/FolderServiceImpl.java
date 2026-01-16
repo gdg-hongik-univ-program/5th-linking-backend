@@ -3,8 +3,9 @@ package com.gdg.linking.domain.folder;
 import com.gdg.linking.domain.folder.dto.FolderCreateRequest;
 import com.gdg.linking.domain.folder.dto.FolderResponse;
 import com.gdg.linking.domain.folder.dto.FolderUpdateRequest;
-import com.gdg.linking.domain.user.UserRepository; // 유저 확인용
 import com.gdg.linking.domain.user.User;
+import com.gdg.linking.domain.user.UserRepository; // 유저 확인용
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
