@@ -52,18 +52,19 @@ public class ItemServiceImpl implements ItemService{
                 .importance(request.isImportance())
                 .deadline(request.getDeadline())
                 .build();
+
         // 3. 리포지토리에 저장
         Item savedItem = itemRepository.save(item);
-
+        ItemCreateResponse response = ItemCreateResponse.builder()
+                .itemId(savedItem.getItemId())
+                .folderId(folder.getFId()) // 위에서 추출한 ID 값 세팅
+                .title(savedItem.getTitle())
+                .memo(savedItem.getMemo())
+                .importance(savedItem.isImportance())
+                .deadline(savedItem.getDeadline())
+                .build();
         // 4. 저장된 정보를 바탕으로 Response 객체 생성 및 반환
-        return new ItemCreateResponse(
-                savedItem.getItemId(),
-                savedItem.getFolder(),
-                savedItem.getTitle(),
-                savedItem.getMemo(),
-                savedItem.isImportance(),
-                savedItem.getDeadline()
-        );
+        return response;
     }
 
 

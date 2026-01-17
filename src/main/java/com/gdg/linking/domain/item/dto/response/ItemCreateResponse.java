@@ -3,12 +3,14 @@ package com.gdg.linking.domain.item.dto.response;
 import com.gdg.linking.domain.folder.Folder;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
 
 @Getter
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor // 서비스 계층에서 편하게 생성하기 위해 추가
 @Schema(description = "아이템 생성 성공 응답 객체")

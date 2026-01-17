@@ -34,7 +34,7 @@ public class Item {
     private User user;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "folder_id")
+    @JoinColumn(name = "f_id")
     private Folder folder;
     
     //태그기능 미완성
