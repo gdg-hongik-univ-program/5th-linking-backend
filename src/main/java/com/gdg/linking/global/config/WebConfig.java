@@ -27,7 +27,8 @@ public class WebConfig implements WebMvcConfigurer {
     public OpenAPI customOpenAPI() {
         return new OpenAPI()
                 .servers(List.of(
-                        new Server().url("https://thelinking.store").description("Production Server") // 배포 환경 필수 설정
+                        new Server().url("https://thelinking.store").description("Production Server"), // 배포 환경
+                        new Server().url("http://localhost:8080").description("Local Server") // 로컬 환경
                 ));
     }
 }
