@@ -79,6 +79,7 @@ public class ItemServiceImpl implements ItemService{
 
         ItemGetResponse response = ItemGetResponse.builder()
                 .url(item.getUrl())
+                .folderId(item.getFolder().getFId()) // 위에서 추출한 ID 값 세팅
                 .title(item.getTitle())
                 .memo(item.getMemo())
                 .importance(item.isImportance())
@@ -163,6 +164,7 @@ public class ItemServiceImpl implements ItemService{
                 .map(item -> ItemGetResponse.builder()
                         .itemId(item.getItemId())
                         .url(item.getUrl())
+                        .folderId(item.getFolder().getFId()) 
                         .title(item.getTitle())
                         .memo(item.getMemo())
                         .importance(item.isImportance())
