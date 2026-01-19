@@ -25,7 +25,13 @@ public interface ItemService {
 
     void disconnectItems(Long fromId, Long toId, Long userId);
 
-    Map<String, List<RelatedItemResponse>> getAllRelatedLinks(Long itemId);
+    List<RelatedItemResponse> getAllRelatedLinks(Long itemId);
+
+
+
+
+
+
 
     List<ItemGetResponse> getByFolderId(Long folderId);
 }

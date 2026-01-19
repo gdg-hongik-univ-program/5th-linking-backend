@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Setter
@@ -39,6 +40,7 @@ public class ItemGetResponse {
     @Schema(description = "완료 및 리마인드 기한", example = "2026-01-20")
     private LocalDate deadline;
 
-
+    @Schema(description = "저장 날짜", example = "2026-01-20T21:09:00")
+    private LocalDateTime createdAt;
 
 }

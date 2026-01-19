@@ -8,6 +8,7 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -72,8 +73,8 @@ public class Item {
     private LocalDate deletedAt;
 
     @CreatedDate
-    @Column(name = "created_at")
-    private LocalDate createdAt;
+    @Column(name = "created_at", updatable = false) // 생성 시각은 수정되지 않도록 설정 권장
+    private LocalDateTime createdAt;
 
     @ManyToMany
     @JoinTable(

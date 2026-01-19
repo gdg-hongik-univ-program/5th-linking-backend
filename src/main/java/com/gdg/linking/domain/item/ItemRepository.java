@@ -15,5 +15,5 @@ public interface ItemRepository extends JpaRepository<Item, Long>{
     @Query("SELECT i FROM Item i JOIN i.relatedItems ri WHERE ri.itemId = :itemId")
     List<Item> findItemsLinkingToMe(@Param("itemId") Long itemId);
 
-    List<ItemGetResponse> findByFolderId(Long folderId);
+    List<Item> findByFolder_fId(Long fId);
 }

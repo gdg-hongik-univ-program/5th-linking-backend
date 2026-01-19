@@ -68,6 +68,7 @@ public class ItemServiceImpl implements ItemService{
     }
 
 
+    //아이템 단일 조회
     @Override
     @Transactional
     public ItemGetResponse getItem(Long itemId) {
@@ -83,6 +84,7 @@ public class ItemServiceImpl implements ItemService{
                 .memo(item.getMemo())
                 .importance(item.isImportance())
                 .deadline(item.getDeadline())
+                .createdAt(item.getCreatedAt())
                 .build();
 
         return response;
@@ -152,6 +154,7 @@ public class ItemServiceImpl implements ItemService{
         return response;
     }
 
+    //아이템 전체 조회
     @Transactional
     @Override
     public List<ItemGetResponse> getMyItems(Long userId) {
@@ -168,6 +171,7 @@ public class ItemServiceImpl implements ItemService{
                         .importance(item.isImportance())
                         .deadline(item.getDeadline())
                         // 태그 기능이 완성되면 여기에 추가 로직 작성
+                        .createdAt(item.getCreatedAt())
                         .tags(new ArrayList<>())
                         .build())
                 .collect(Collectors.toList());
@@ -188,6 +192,7 @@ public class ItemServiceImpl implements ItemService{
         }
 
         fromItem.addRelation(toItem);
+
     }
 
 
@@ -209,7 +214,7 @@ public class ItemServiceImpl implements ItemService{
 
     @Override
     @Transactional
-    public Map<String, List<RelatedItemResponse>> getAllRelatedLinks(Long itemId) {
+    public List<RelatedItemResponse> getAllRelatedLinks(Long itemId) {
         Item item = itemRepository.findById(itemId)
                 .orElseThrow(() -> new IllegalArgumentException("아이템이 없습니다."));
 
@@ -223,23 +228,36 @@ public class ItemServiceImpl implements ItemService{
                 .map(RelatedItemResponse::fromEntity) // 여기도 마찬가지!
                 .collect(Collectors.toList());
 
-        Map<String, List<RelatedItemResponse>> response = new HashMap<>();
-        response.put("references", following);   // 내가 참고하는 링크
-        response.put("referencedBy", followedBy); // 나를 참고하는 링크
+        List<RelatedItemResponse> response = new ArrayList<>();
+        response.addAll(following);
+        response.addAll(followedBy);
 
         return response;
     }
 
+
+    //폴더 id로 아이템 조회
     @Transactional
     @Override
-    public List<ItemGetResponse> getByFolderId(Long folderId) {
+    public List<ItemGetResponse> getByFolderId(Long fId) {
 
 
+        List<Item> items = itemRepository.findByFolder_fId(fId);
 
-        List<ItemGetResponse> responses = itemRepository.findByFolderId(folderId);
+        List<ItemGetResponse> response = items.stream()
+                .map(item -> ItemGetResponse.builder()
+                        .itemId(item.getItemId())
+                        .url(item.getUrl())
+                        .title(item.getTitle())
+                        .memo(item.getMemo())
+                        .importance(item.isImportance())
+                        .deadline(item.getDeadline())
+                        .tags(new ArrayList<>()) // 필요 시 태그 로직 추가
+                        .createdAt(item.getCreatedAt())
+                        .build())
+                .collect(Collectors.toList());
 
-
-        return responses;
+        return response;
     }
 
 }
