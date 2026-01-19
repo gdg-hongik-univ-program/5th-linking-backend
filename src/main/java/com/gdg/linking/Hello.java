@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class Hello {
 
-    @GetMapping("/")
+    @GetMapping("/api")
     public String helloCheck() {
         return "Hello World! 배포 성공!";
     }
