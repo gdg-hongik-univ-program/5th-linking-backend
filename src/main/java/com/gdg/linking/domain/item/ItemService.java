@@ -2,12 +2,10 @@ package com.gdg.linking.domain.item;
 
 import com.gdg.linking.domain.item.dto.request.ItemCreateRequest;
 import com.gdg.linking.domain.item.dto.request.ItemUpdateRequest;
-import com.gdg.linking.domain.item.dto.response.ItemCreateResponse;
-import com.gdg.linking.domain.item.dto.response.ItemDeleteResponse;
-import com.gdg.linking.domain.item.dto.response.ItemGetResponse;
-import com.gdg.linking.domain.item.dto.response.ItemUpdateResponse;
+import com.gdg.linking.domain.item.dto.response.*;
 
 import java.util.List;
+import java.util.Map;
 
 public interface ItemService {
 
@@ -21,4 +19,19 @@ public interface ItemService {
     ItemDeleteResponse deleteItem(Long itemId, Long userId);
 
     List<ItemGetResponse> getMyItems(Long userId);
+
+
+    void addRelatedLink(Long fromId, Long toId);
+
+    void disconnectItems(Long fromId, Long toId, Long userId);
+
+    List<RelatedItemResponse> getAllRelatedLinks(Long itemId);
+
+
+
+
+
+
+
+    List<ItemGetResponse> getByFolderId(Long folderId);
 }

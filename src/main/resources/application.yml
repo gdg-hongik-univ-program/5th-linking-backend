@@ -11,6 +11,8 @@ spring:
     password: ${RDS_PASSWORD}
 
 
+
+
   jpa:
     hibernate:
       ddl-auto: update # 엔티티 수정을 DB 테이블에 자동으로 반영해줍니다.

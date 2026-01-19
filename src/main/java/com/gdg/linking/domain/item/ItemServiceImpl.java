@@ -4,12 +4,10 @@ import com.gdg.linking.domain.folder.Folder;
 import com.gdg.linking.domain.folder.FolderRepository;
 import com.gdg.linking.domain.item.dto.request.ItemCreateRequest;
 import com.gdg.linking.domain.item.dto.request.ItemUpdateRequest;
-import com.gdg.linking.domain.item.dto.response.ItemCreateResponse;
-import com.gdg.linking.domain.item.dto.response.ItemDeleteResponse;
-import com.gdg.linking.domain.item.dto.response.ItemGetResponse;
-import com.gdg.linking.domain.item.dto.response.ItemUpdateResponse;
+import com.gdg.linking.domain.item.dto.response.*;
 import com.gdg.linking.domain.user.User;
 import com.gdg.linking.domain.user.UserRepository;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
@@ -19,13 +17,16 @@ import java.nio.file.AccessDeniedException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 
 @Service
 @RequiredArgsConstructor
 public class ItemServiceImpl implements ItemService{
+
 
     private final UserRepository userRepository;
 
@@ -68,6 +69,7 @@ public class ItemServiceImpl implements ItemService{
     }
 
 
+    //아이템 단일 조회
     @Override
     @Transactional
     public ItemGetResponse getItem(Long itemId) {
@@ -84,6 +86,7 @@ public class ItemServiceImpl implements ItemService{
                 .memo(item.getMemo())
                 .importance(item.isImportance())
                 .deadline(item.getDeadline())
+                .createdAt(item.getCreatedAt())
                 .build();
 
         return response;
@@ -153,6 +156,7 @@ public class ItemServiceImpl implements ItemService{
         return response;
     }
 
+    //아이템 전체 조회
     @Transactional
     @Override
     public List<ItemGetResponse> getMyItems(Long userId) {
@@ -170,10 +174,93 @@ public class ItemServiceImpl implements ItemService{
                         .importance(item.isImportance())
                         .deadline(item.getDeadline())
                         // 태그 기능이 완성되면 여기에 추가 로직 작성
+                        .createdAt(item.getCreatedAt())
                         .tags(new ArrayList<>())
                         .build())
                 .collect(Collectors.toList());
     }
 
+    @Override
+    @Transactional
+    public void addRelatedLink(Long fromId, Long toId) {
+        // 본인 확인 로직 등은 생략
+        Item fromItem = itemRepository.findById(fromId)
+                .orElseThrow(() -> new EntityNotFoundException("기준 아이템 없음"));
+        Item toItem = itemRepository.findById(toId)
+                .orElseThrow(() -> new EntityNotFoundException("대상 아이템 없음"));
+
+        // 자기 자신을 연결하는 것 방지
+        if (fromId.equals(toId)) {
+            throw new IllegalArgumentException("자기 자신은 연결할 수 없습니다.");
+        }
+
+        fromItem.addRelation(toItem);
+
+    }
+
+
+    @Override
+    @Transactional
+    public void disconnectItems(Long fromId, Long toId, Long userId) {
+        Item fromItem = itemRepository.findById(fromId)
+                .orElseThrow(() -> new IllegalArgumentException("아이템을 찾을 수 없습니다."));
+        Item toItem = itemRepository.findById(toId)
+                .orElseThrow(() -> new IllegalArgumentException("대상 아이템을 찾을 수 없습니다."));
+
+        // 권한 확인 (본인 아이템인지)
+        if (!fromItem.getUser().getUserId().equals(userId)) {
+            throw new IllegalArgumentException("수정 권한이 없습니다.");
+        }
+
+        fromItem.removeRelation(toItem); // 리스트에서 제거하면 DB 테이블에서도 삭제됨
+    }
+
+    @Override
+    @Transactional
+    public List<RelatedItemResponse> getAllRelatedLinks(Long itemId) {
+        Item item = itemRepository.findById(itemId)
+                .orElseThrow(() -> new IllegalArgumentException("아이템이 없습니다."));
+
+        // 1. 내가 연결한 아이템들 (To)
+        List<RelatedItemResponse> following = item.getRelatedItems().stream()
+                .map(RelatedItemResponse::fromEntity) // RelatedItemResponse의 메서드를 호출!
+                .collect(Collectors.toList());
+
+        // 2. 나를 연결한 아이템들 (From)
+        List<RelatedItemResponse> followedBy = itemRepository.findItemsLinkingToMe(itemId).stream()
+                .map(RelatedItemResponse::fromEntity) // 여기도 마찬가지!
+                .collect(Collectors.toList());
+
+        List<RelatedItemResponse> response = new ArrayList<>();
+        response.addAll(following);
+        response.addAll(followedBy);
+
+        return response;
+    }
+
+
+    //폴더 id로 아이템 조회
+    @Transactional
+    @Override
+    public List<ItemGetResponse> getByFolderId(Long fId) {
+
+
+        List<Item> items = itemRepository.findByFolder_fId(fId);
+
+        List<ItemGetResponse> response = items.stream()
+                .map(item -> ItemGetResponse.builder()
+                        .itemId(item.getItemId())
+                        .url(item.getUrl())
+                        .title(item.getTitle())
+                        .memo(item.getMemo())
+                        .importance(item.isImportance())
+                        .deadline(item.getDeadline())
+                        .tags(new ArrayList<>()) // 필요 시 태그 로직 추가
+                        .createdAt(item.getCreatedAt())
+                        .build())
+                .collect(Collectors.toList());
+
+        return response;
+    }
 
 }
