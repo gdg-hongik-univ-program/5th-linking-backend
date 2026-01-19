@@ -12,5 +12,6 @@ public interface UserService {
 
     UserLoginResponse login(UserLoginRequest request);
 
+    Boolean findById(String id);
 
 }

@@ -4,6 +4,8 @@ import com.gdg.linking.domain.user.dto.request.UserCreateRequest;
 import com.gdg.linking.domain.user.dto.request.UserLoginRequest;
 import com.gdg.linking.domain.user.dto.response.UserCreateResponse;
 import com.gdg.linking.domain.user.dto.response.UserLoginResponse;
+import com.gdg.linking.global.exception.custom.BadRequestException;
+import com.gdg.linking.global.exception.message.ErrorMessage;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
@@ -23,10 +25,6 @@ public class UserServiceImpl implements UserService{
     @Transactional
     public UserCreateResponse register(UserCreateRequest request) {
 
-        User existUser = userRepository.findByLoginId(request.getLoginId());
-        if (existUser != null) {
-            throw new RuntimeException("이미 존재하는 Id 입니다");
-        }
 
         //비밀번호 암호화
         String encryptPassword = encryptSHA256(request.getPassword());
@@ -36,6 +34,7 @@ public class UserServiceImpl implements UserService{
                 .password(encryptPassword)
                 .email(request.getEmail())
                 .nickName(request.getNickName())
+                .isAdmin(false)
                 .build();
 
         userRepository.save(user);
@@ -54,11 +53,28 @@ public class UserServiceImpl implements UserService{
         User user = userRepository.findByIdAndPassword(request.getLoginId(),encryptPassword);
 
         if(user == null) {
-            throw new RuntimeException("아이디나 비밀번호가 틀렸습니다");
+            throw new BadRequestException(ErrorMessage.MEMBER_NOTFOUND);
         }
 
         UserLoginResponse response = new UserLoginResponse(user.getUserId(), user.getLoginId(),user.isAdmin());
 
         return response;
+    }
+
+    @Override
+    @Transactional
+    public Boolean findById(String id) {
+
+        User user = userRepository.findByLoginId(id);
+        
+        //null 비어있으면 사용 가능 값
+        if(user ==null){
+            return true;
+            
+            // 뭔가 있으면 사용 불가능
+        } else{
+            return false;
+        }
+
     }
 }
