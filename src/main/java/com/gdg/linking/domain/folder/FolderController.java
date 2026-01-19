@@ -23,7 +23,7 @@ public class FolderController {
 
     @LoginCheck
     @PostMapping
-    @Operation(summary = "폴더 생성", description = "새로운 폴더를 생성합니다.")
+    @Operation(summary = "폴더 생성", description = "새로운 폴더를 생성합니다. 최상위 폴더일 경우 parentId에 null 입력.")
     public ResponseEntity<Void> createFolder(@RequestBody FolderCreateRequest request, HttpSession session) {
         Long userId = (Long) session.getAttribute("LOGIN_USER_ID");
 
