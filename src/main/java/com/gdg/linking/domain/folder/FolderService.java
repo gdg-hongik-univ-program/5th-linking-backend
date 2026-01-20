@@ -7,11 +7,11 @@ import com.gdg.linking.domain.folder.dto.FolderUpdateRequest;
 import java.util.List;
 
 public interface FolderService {
-    void createFolder(Long userId, FolderCreateRequest request);
+    FolderResponse createFolder(Long userId, FolderCreateRequest request);
 
     List<FolderResponse> getFolders(Long userId);
 
-    void updateFolder(Long folderId, FolderUpdateRequest request);
+    FolderResponse updateFolder(Long folderId, FolderUpdateRequest request);
 
     void deleteFolder(Long folderId);
 }

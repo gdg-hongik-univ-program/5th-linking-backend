@@ -11,7 +11,7 @@ import lombok.Setter;
 @Schema(description = "폴더 생성 요청")
 public class FolderCreateRequest {
 
-    @Schema(description = "폴더 이름", example = "프로젝트 자료")
+    @Schema(description = "폴더 이름", example = "어노테이션 종류")
     private String folderName; // 생성할 폴더 이름
 
     @Schema(description = "부모 폴더 ID (최상위 폴더 생성 시 null)", example = "1")

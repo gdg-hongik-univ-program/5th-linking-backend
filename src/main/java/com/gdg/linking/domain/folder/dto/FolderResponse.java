@@ -19,7 +19,7 @@ public class FolderResponse {
     @Schema(description = "폴더 이름", example = "프로젝트 자료")
     private String folderName;
 
-    @Schema(description = "부모 폴더 ID (최상위 폴더면 null)", example = "1")
+    @Schema(description = "부모 폴더 ID (최상위 폴더면 null)", example = "null")
     private Long parentId;
 
     // 트리 구조를 위한 코드

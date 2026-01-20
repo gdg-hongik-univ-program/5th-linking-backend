@@ -25,28 +25,32 @@ public class FolderServiceImpl implements FolderService {
 
     @Override
     @Transactional
-    public void createFolder(Long userId, FolderCreateRequest request) {
-        // 1. 유저 존재 확인
+    public FolderResponse createFolder(Long userId, FolderCreateRequest request) {
         User user = userRepository.findById(userId);
-
         if (user == null) {
             throw new RuntimeException("사용자를 찾을 수 없습니다.");
         }
 
-        // 2. 부모 폴더 찾기 로직
         Folder parent = null;
         if (request.getParentId() != null) {
             parent = folderRepository.findById(request.getParentId())
                     .orElseThrow(() -> new RuntimeException("부모 폴더를 찾을 수 없습니다."));
         }
 
-        // 3. 폴더 생성 및 저장
         Folder folder = Folder.builder()
                 .folderName(request.getFolderName())
                 .user(user)
                 .parentFolder(parent)
                 .build();
-        folderRepository.save(folder);
+
+        Folder savedFolder = folderRepository.save(folder);
+
+        return FolderResponse.builder()
+                .folderId(savedFolder.getFId())
+                .folderName(savedFolder.getFolderName())
+                .parentId(savedFolder.getParentFolder() != null ? savedFolder.getParentFolder().getFId() : null)
+                .children(new ArrayList<>())
+                .build();
     }
 
     @Override
@@ -87,13 +91,18 @@ public class FolderServiceImpl implements FolderService {
 
     @Override
     @Transactional
-    public void updateFolder(Long folderId, FolderUpdateRequest request) {
-        // 1. 대상 폴더 조회
+    public FolderResponse updateFolder(Long folderId, FolderUpdateRequest request) {
         Folder folder = folderRepository.findById(folderId)
                 .orElseThrow(() -> new RuntimeException("폴더를 찾을 수 없습니다."));
 
-        // 2. 이름 변경 (Dirty Checking 활용)
         folder.setFolderName(request.getFolderName());
+
+        return FolderResponse.builder()
+                .folderId(folder.getFId())
+                .folderName(folder.getFolderName())
+                .parentId(folder.getParentFolder() != null ? folder.getParentFolder().getFId() : null)
+                .children(new ArrayList<>())
+                .build();
     }
 
     @Override
