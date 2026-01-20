@@ -8,6 +8,9 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name ="items")
@@ -70,10 +73,30 @@ public class Item {
     private LocalDate deletedAt;
 
     @CreatedDate
-    @Column(name = "created_at")
-    private LocalDate createdAt;
+    @Column(name = "created_at", updatable = false) // 생성 시각은 수정되지 않도록 설정 권장
+    private LocalDateTime createdAt;
 
+    @ManyToMany
+    @JoinTable(
+            name = "item_relations",           // 생성될 중간 테이블 이름
+            joinColumns = @JoinColumn(name = "from_id"),    // 현재 아이템(출발점) 외래키
+            inverseJoinColumns = @JoinColumn(name = "to_id") // 연결될 아이템(도착점) 외래키
+    )
+    private List<Item> relatedItems = new ArrayList<>();
 
+    // 연결 편의 메서드
+    public void addRelation(Item target) {
+        if (target != null && !this.relatedItems.contains(target)) {
+            this.relatedItems.add(target);
+        }
+    }
+
+    // 연결 해제 메서드
+    public void removeRelation(Item target) {
+        if (target != null) {
+            this.relatedItems.remove(target);
+        }
+    }
 
     //업데이트 전용 메서드
     public void update(String url, String title, String memo, boolean importance, LocalDate deadline) {
