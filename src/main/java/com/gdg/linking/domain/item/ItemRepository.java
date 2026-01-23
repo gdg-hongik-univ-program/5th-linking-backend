@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.LocalDate;
 import java.util.List;
 
 public interface ItemRepository extends JpaRepository<Item, Long>{
@@ -16,4 +17,6 @@ public interface ItemRepository extends JpaRepository<Item, Long>{
     List<Item> findItemsLinkingToMe(@Param("itemId") Long itemId);
 
     List<Item> findByFolder_fId(Long fId);
+
+    List<Item> findByDeadlineAndStatus(LocalDate deadline, Item.ItemStatus status);
 }
