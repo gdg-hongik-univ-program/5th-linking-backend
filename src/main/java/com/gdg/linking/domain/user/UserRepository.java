@@ -48,4 +48,9 @@ public class UserRepository {
 
         return result.isEmpty() ? null : result.get(0);
     }
+
+    public List<User> findAll() {
+        return em.createQuery("select u from User u", User.class)
+                .getResultList();
+    }
 }
