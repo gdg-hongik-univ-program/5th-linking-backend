@@ -28,9 +28,9 @@ import static com.gdg.linking.global.utils.SessionUtil.getLoginUserId;
 @RequestMapping("item")
 public class ItemContoller {
 
-    private final ItemServiceImpl itemService;
+    private final ItemService itemService;
 
-    public ItemContoller(ItemServiceImpl itemService) {
+    public ItemContoller(ItemService itemService) {
         this.itemService = itemService;
     }
 
