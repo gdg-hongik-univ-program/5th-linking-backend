@@ -17,7 +17,7 @@ public class WebConfig implements WebMvcConfigurer {
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**")
-                .allowedOrigins("https://www.thelinking.store")
+                .allowedOrigins("https://www.thelinking.store", "http://localhost:5173")
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "PATCH") // 3. 필요한 메서드만 허용
                 .allowCredentials(true) // 4. 쿠키/인증 헤더 허용 시 필수
                 .maxAge(3600); // 5. Preflight 요청 캐싱 시간 설정 (성능 향상)
