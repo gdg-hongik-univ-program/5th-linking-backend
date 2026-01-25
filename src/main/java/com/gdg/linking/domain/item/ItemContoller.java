@@ -65,6 +65,10 @@ public class ItemContoller {
         // 1. 세션에서 로그인한 유저 ID 가져오기
         Long userId = getLoginUserId(session);
 
+        if (userId == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build(); // 401 에러 반환
+        }
+        
         // 2. 서비스 호출 및 결과 반환
         List<ItemGetResponse> responses = itemService.getMyItems(userId);
 
