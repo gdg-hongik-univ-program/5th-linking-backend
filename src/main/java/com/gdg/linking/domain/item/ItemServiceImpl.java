@@ -158,27 +158,56 @@ public class ItemServiceImpl implements ItemService{
     }
 
     //아이템 전체 조회
-    @Transactional
     @Override
-    public List<ItemGetResponse> getMyItems(Long userId) {
-        // 1. 해당 사용자의 아이템 리스트 조회
-        List<Item> items = itemRepository.findAllByUser_UserIdOrderByCreatedAtDesc(userId);
+    @Transactional
+    public List<ItemGetResponse> getMyItems(Long userId, String filter) {
+        List<Item> items;
 
-        // 2. Entity -> DTO 변환
+        // 마감 임박 (오늘 ~ 7일 뒤)
+        if ("deadline".equals(filter)) {
+            items = itemRepository.findByUser_UserIdAndDeadlineBetweenAndStatusOrderByDeadlineAsc(
+                    userId, LocalDate.now(), LocalDate.now().plusDays(7), Item.ItemStatus.ACTIVE);
+        }
+        // 중요 표시 (importance == true)
+        else if ("importance".equals(filter)) {
+            items = itemRepository.findByUser_UserIdAndImportanceTrue(userId);
+        }
+        // 정리 대상 (생성/복구된 지 50일 경과)
+        else if ("cleanup".equals(filter)) {
+            items = itemRepository.findByUser_UserIdAndCreatedAtBeforeAndStatus(
+                    userId, LocalDateTime.now().minusDays(50), Item.ItemStatus.ACTIVE);
+        }
+        // 필터가 없거나 기본 조회 (최신순)
+        else {
+            items = itemRepository.findAllByUser_UserIdOrderByCreatedAtDesc(userId);
+        }
+
+        // Item 엔티티를 ItemGetResponse DTO로 변환하여 반환
         return items.stream()
                 .map(item -> ItemGetResponse.builder()
                         .itemId(item.getItemId())
                         .url(item.getUrl())
-                        .folderId(item.getFolder() != null ? item.getFolder().getFId() : null )
                         .title(item.getTitle())
+                        .folderId(item.getFolder() != null ? item.getFolder().getFId() : null)
                         .memo(item.getMemo())
                         .importance(item.isImportance())
                         .deadline(item.getDeadline())
-                        // 태그 기능이 완성되면 여기에 추가 로직 작성
                         .createdAt(item.getCreatedAt())
-                        .tags(new ArrayList<>())
                         .build())
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional
+    public void restoreItem(Long itemId, Long userId) {
+        Item item = itemRepository.findById(itemId)
+                .orElseThrow(() -> new EntityNotFoundException("아이템을 찾을 수 없습니다."));
+
+        if (!item.getUser().getUserId().equals(userId)) {
+            throw new RuntimeException("권한이 없습니다."); // 보안 체크
+        }
+
+        item.restore(); // 엔티티의 restore() 호출하여 50일 기준 리셋
     }
 
     @Override
