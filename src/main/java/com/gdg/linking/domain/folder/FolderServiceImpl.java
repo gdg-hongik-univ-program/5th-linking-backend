@@ -133,6 +133,8 @@ public class FolderServiceImpl implements FolderService {
                 .createdAt(createdAt)
                 .displayTime(displayTime)
                 .childCount(folder.getChildFolders().size())
+                //item 갯수 조회
+                .itemCount(folder.getItems().size())
                 .children(new ArrayList<>())
                 .build();
     }
