@@ -1,3 +1,11 @@
+server:
+  servlet:
+    session:
+      cookie:
+        same-site: none   # Cross-Origin 간 쿠키 전송 허용
+        secure: true      # same-site가 none일 때 반드시 true여야 함 (HTTPS)
+        http-only: true   # 보안을 위해 자바스크립트 접근 차단 권장
+
 spring:
   application:
     name: linking

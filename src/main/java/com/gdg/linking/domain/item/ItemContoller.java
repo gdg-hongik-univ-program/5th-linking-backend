@@ -59,12 +59,16 @@ public class ItemContoller {
 
     @LoginCheck
     @Operation(summary = "내 아이템 전체 조회", description = "현재 로그인한 사용자가 등록한 모든 아이템 목록을 최신순으로 반환합니다.")
-    @PostMapping("/me")
+    @PostMapping("/mine")
     public ResponseEntity<List<ItemGetResponse>> getMyItems(HttpSession session) {
 
         // 1. 세션에서 로그인한 유저 ID 가져오기
         Long userId = getLoginUserId(session);
 
+        if (userId == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build(); // 401 에러 반환
+        }
+        
         // 2. 서비스 호출 및 결과 반환
         List<ItemGetResponse> responses = itemService.getMyItems(userId);
 

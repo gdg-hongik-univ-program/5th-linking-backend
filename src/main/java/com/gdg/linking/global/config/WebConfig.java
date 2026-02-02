@@ -17,17 +17,22 @@ public class WebConfig implements WebMvcConfigurer {
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**")
-                .allowedOrigins("http://localhost:5173") // 프론트 서버만 허용
+                .allowedOriginPatterns(
+                        "http://localhost:[*]",           // 로컬의 모든 포트 허용
+                        "https://*.thelinking.store"      // api., www. 등 모든 서브도메인 허용
+                )
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "PATCH") // 3. 필요한 메서드만 허용
+                .allowedHeaders("Content-Type", "Authorization", "X-Requested-With")
                 .allowCredentials(true) // 4. 쿠키/인증 헤더 허용 시 필수
                 .maxAge(3600); // 5. Preflight 요청 캐싱 시간 설정 (성능 향상)
     }
+
 
     @Bean
     public OpenAPI customOpenAPI() {
         return new OpenAPI()
                 .servers(List.of(
-                        new Server().url("https://thelinking.store").description("Production Server"), // 배포 환경
+                        new Server().url("https://api.thelinking.store").description("Production Server"), // 배포 환경
                         new Server().url("http://localhost:8080").description("Local Server") // 로컬 환경
                 ));
     }
