@@ -27,11 +27,12 @@ public class WebConfig implements WebMvcConfigurer {
                 .maxAge(3600); // 5. Preflight 요청 캐싱 시간 설정 (성능 향상)
     }
 
+
     @Bean
     public OpenAPI customOpenAPI() {
         return new OpenAPI()
                 .servers(List.of(
-                        new Server().url("https://thelinking.store").description("Production Server"), // 배포 환경
+                        new Server().url("https://api.thelinking.store").description("Production Server"), // 배포 환경
                         new Server().url("http://localhost:8080").description("Local Server") // 로컬 환경
                 ));
     }

@@ -43,7 +43,7 @@ public class ItemServiceImpl implements ItemService{
         User user = userRepository.getReferenceById(userId);
         Folder folder = folderRepository.getReferenceById(request.getFolderId());
 
-        //폴더 Id 추가 아직 안했음
+
         Item item = Item.builder()
                 .user(user)
                 .folder(folder)
