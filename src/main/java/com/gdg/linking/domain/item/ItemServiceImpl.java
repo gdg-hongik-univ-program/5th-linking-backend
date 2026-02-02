@@ -168,7 +168,7 @@ public class ItemServiceImpl implements ItemService{
                 .map(item -> ItemGetResponse.builder()
                         .itemId(item.getItemId())
                         .url(item.getUrl())
-                        .folderId(item.getFolder().getFId()) 
+                        .folderId(item.getFolder() != null ? item.getFolder().getFId() : null )
                         .title(item.getTitle())
                         .memo(item.getMemo())
                         .importance(item.isImportance())
