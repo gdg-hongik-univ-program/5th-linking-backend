@@ -6,16 +6,22 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.util.List;
+import java.util.Map;
 
 @Getter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class CalendarMonthResponse {
-
     private int year;
     private int month;
-    // 상단 캘린더 점(Dot) 표시를 위한 요약 리스트
-    private List<CalendarSummaryDto> calendarSummary;
+    private Map<String, DaySummary> calendarSummary;
 
+    @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class DaySummary {
+        private int createdCount;
+        private int deadlineCount;
+    }
 }
