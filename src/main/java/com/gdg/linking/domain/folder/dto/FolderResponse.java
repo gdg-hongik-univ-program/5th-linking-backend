@@ -32,6 +32,14 @@ public class FolderResponse {
     @Schema(description = "하위 폴더 수", example = "3")
     private int childCount;
 
+    @Schema(description = "속한 링크(아이템) 수", example = "15")
+    private int itemCount; // item 갯수 추가
+
+    @Schema(description = "폴더 + 아이템 합계", example = "18")
+    public int getTotalCount() {
+        return this.childCount + this.itemCount;
+    }
+
     // 트리 구조를 위한 코드
     @Builder.Default
     @Schema(description = "하위 폴더 목록")
