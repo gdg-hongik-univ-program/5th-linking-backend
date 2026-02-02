@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -21,6 +22,15 @@ public class FolderResponse {
 
     @Schema(description = "부모 폴더 ID (최상위 폴더면 null)", example = "null")
     private Long parentId;
+
+    @Schema(description = "생성 시각", example = "2026-02-02T12:00:00")
+    private LocalDateTime createdAt;
+
+    @Schema(description = "생성 시각(화면 표시용)", example = "(오늘: 12:00 / 이전: 2026년 02월 01일)")
+    private String displayTime;
+
+    @Schema(description = "하위 폴더 수", example = "3")
+    private int childCount;
 
     // 트리 구조를 위한 코드
     @Builder.Default

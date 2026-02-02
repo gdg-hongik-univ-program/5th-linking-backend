@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -61,12 +62,7 @@ public class FolderServiceImpl implements FolderService {
 
         // 2. Folder 엔티티를 FolderResponse DTO로 변환하여 Map에 저장
         Map<Long, FolderResponse> responseMap = allFolders.stream()
-                .map(folder -> FolderResponse.builder()
-                        .folderId(folder.getFId())
-                        .folderName(folder.getFolderName())
-                        .parentId(folder.getParentFolder() != null ? folder.getParentFolder().getFId() : null)
-                        .children(new ArrayList<>())
-                        .build())
+                .map(this::convertToResponse)
                 .collect(Collectors.toMap(FolderResponse::getFolderId, Function.identity()));
 
         // 3. 최상위 폴더들을 담을 리스트
@@ -113,5 +109,31 @@ public class FolderServiceImpl implements FolderService {
             throw new RuntimeException("삭제할 폴더가 존재하지 않습니다.");
         }
         folderRepository.deleteById(folderId);
+    }
+
+    private FolderResponse convertToResponse(Folder folder) {
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime createdAt = folder.getCreatedAt();
+
+        String displayTime = "";
+        if (createdAt != null) {
+            if (createdAt.toLocalDate().equals(now.toLocalDate())) {
+                // 오늘인 경우: 시:분 (예: 14:30)
+                displayTime = createdAt.format(java.time.format.DateTimeFormatter.ofPattern("HH:mm"));
+            } else {
+                // 다른 날인 경우: 연-월-일 (예: 2026년 02월 01일)
+                displayTime = createdAt.format(java.time.format.DateTimeFormatter.ofPattern("yyyy년 MM월 dd일"));
+            }
+        }
+
+        return FolderResponse.builder()
+                .folderId(folder.getFId())
+                .folderName(folder.getFolderName())
+                .parentId(folder.getParentFolder() != null ? folder.getParentFolder().getFId() : null)
+                .createdAt(createdAt)
+                .displayTime(displayTime)
+                .childCount(folder.getChildFolders().size())
+                .children(new ArrayList<>())
+                .build();
     }
 }
