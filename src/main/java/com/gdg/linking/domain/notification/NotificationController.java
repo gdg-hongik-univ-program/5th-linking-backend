@@ -27,10 +27,16 @@ public class NotificationController {
         return ResponseEntity.ok(notificationService.getNotifications(userId));
     }
 
+    @LoginCheck
     @PatchMapping("/{notification_id}/read")
     @Operation(summary = "알림 읽음 처리", description = "특정 알림을 읽음 상태로 변경합니다.")
-    public ResponseEntity<Void> markAsRead(@PathVariable("notification_id") Long notificationId) {
-        notificationService.markAsRead(notificationId);
+    public ResponseEntity<Void> markAsRead(@PathVariable("notification_id") Long notificationId, HttpSession session) {
+
+        Long userId = (Long) session.getAttribute("LOGIN_USER_ID");
+
+        notificationService.markAsRead(notificationId, userId);
+
         return ResponseEntity.ok().build();
     }
+
 }
