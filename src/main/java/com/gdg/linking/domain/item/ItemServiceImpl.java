@@ -47,6 +47,7 @@ public class ItemServiceImpl implements ItemService{
         Item item = Item.builder()
                 .user(user)
                 .folder(folder)
+                .status(Item.ItemStatus.ACTIVE)
                 .url(request.getUrl())
                 .title(request.getTitle())
                 .memo(request.getMemo())
