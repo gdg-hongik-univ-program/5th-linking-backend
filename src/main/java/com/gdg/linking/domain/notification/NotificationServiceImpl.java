@@ -69,10 +69,18 @@ public class NotificationServiceImpl implements NotificationService {
 
     @Override
     @Transactional
-    public void markAsRead(Long notificationId) {
+    public void markAsRead(Long notificationId, Long userId) {
+
         Notification notification = notificationRepository.findById(notificationId)
-                .orElseThrow(() -> new RuntimeException("알림을 찾을 수 없습니다."));
-        notification.setRead(true); // 읽음 상태로 변경
+                .orElseThrow(() -> new RuntimeException("해당 알림을 찾을 수 없습니다."));
+
+        if (!notification.getUser().getUserId().equals(userId)) {
+            throw new RuntimeException("해당 알림에 대한 접근 권한이 없습니다.");
+        }
+
+        // 읽음 상태 변경
+        // @Transactional 어노테이션 덕분에 별도의 save() 호출 없이도 메서드가 끝날 때 Dirty Checking에 의해 DB에 자동으로 반영됩니다.
+        notification.setRead(true);
     }
 
     @Override
