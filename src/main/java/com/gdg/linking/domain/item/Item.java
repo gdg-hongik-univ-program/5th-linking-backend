@@ -73,8 +73,14 @@ public class Item {
     private LocalDate deletedAt;
 
     @CreatedDate
-    @Column(name = "created_at", updatable = false) // 생성 시각은 수정되지 않도록 설정 권장
+    @Column(name = "created_at")
     private LocalDateTime createdAt;
+
+    public void restore() {
+        this.status = ItemStatus.ACTIVE;
+        this.createdAt = LocalDateTime.now(); // 복구 시 시각을 현재로 갱신 (50일 기준 리셋)
+        this.deletedAt = null;
+    }
 
     @ManyToMany
     @JoinTable(

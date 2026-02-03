@@ -18,7 +18,9 @@ public interface ItemService {
 
     ItemDeleteResponse deleteItem(Long itemId, Long userId);
 
-    List<ItemGetResponse> getMyItems(Long userId);
+    List<ItemGetResponse> getMyItems(Long userId, String filter);
+
+    void restoreItem(Long itemId, Long userId);
 
 
     void addRelatedLink(Long fromId, Long toId);
@@ -26,11 +28,6 @@ public interface ItemService {
     void disconnectItems(Long fromId, Long toId, Long userId);
 
     List<RelatedItemResponse> getAllRelatedLinks(Long itemId);
-
-
-
-
-
 
 
     List<ItemGetResponse> getByFolderId(Long folderId);

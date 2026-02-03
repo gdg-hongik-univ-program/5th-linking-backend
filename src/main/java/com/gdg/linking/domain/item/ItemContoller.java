@@ -58,21 +58,29 @@ public class ItemContoller {
     }
 
     @LoginCheck
-    @Operation(summary = "내 아이템 전체 조회", description = "현재 로그인한 사용자가 등록한 모든 아이템 목록을 최신순으로 반환합니다.")
-    @PostMapping("/mine")
-    public ResponseEntity<List<ItemGetResponse>> getMyItems(HttpSession session) {
+    @GetMapping("")
+    @Operation(summary = "내 아이템 목록 조회", description = "필터(deadline, importance, cleanup)를 지원합니다.")
+    public ResponseEntity<List<ItemGetResponse>> getMyItems(
+            @RequestParam(value = "filter", required = false) String filter, HttpSession session) {
 
-        // 1. 세션에서 로그인한 유저 ID 가져오기
         Long userId = getLoginUserId(session);
 
-        if (userId == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build(); // 401 에러 반환
-        }
-        
-        // 2. 서비스 호출 및 결과 반환
-        List<ItemGetResponse> responses = itemService.getMyItems(userId);
+        List<ItemGetResponse> response = itemService.getMyItems(userId, filter);
 
-        return ResponseEntity.ok(responses);
+        return ResponseEntity.ok(response);
+    }
+
+    @LoginCheck
+    @PostMapping("/{item_id}/restore")
+    @Operation(summary = "아이템 복구", description = "아이템을 ACTIVE 상태로 돌리고 50일 기준을 리셋합니다.")
+    public ResponseEntity<Void> restoreItem(
+            @PathVariable("item_id") Long itemId, HttpSession session) {
+
+        Long userId = getLoginUserId(session);
+
+        itemService.restoreItem(itemId, userId);
+
+        return ResponseEntity.ok().build();
     }
 
 
