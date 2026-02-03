@@ -3,6 +3,8 @@ package com.gdg.linking.domain.notification.dto;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 import lombok.Getter;
+
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Getter
@@ -24,6 +26,10 @@ public class NotificationResponse {
     @Schema(description = "연결된 아이템 ID (이동용)")
     private Long itemId;
 
+    @Schema(description = "알림 전송 예정 날짜 (D-DAY 등 기준일)")
+    private LocalDate scheduledDate;
+
     @Schema(description = "알림 생성 시각")
     private LocalDateTime createdAt;
+
 }
