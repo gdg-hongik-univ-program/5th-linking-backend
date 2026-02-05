@@ -13,10 +13,9 @@ public class NotificationScheduler {
     private final NotificationService notificationService;
 
     // 매일 아침 8시에 실행되도록 설정
-    @Scheduled(cron = "0 0 8 * * *", zone = "Asia/Seoul")
+    @Scheduled(cron = "0 0 0 * * *", zone = "Asia/Seoul")
     public void runDeadlineCheck() {
-        log.info("마감일 알림 체크 스케줄러 시작 - 아침 8시");
-        notificationService.createDeadlineNotifications();
+        log.info("마감일 알림 체크 스케줄러 시작 - 00시");
         log.info("마감일 알림 체크 스케줄러 완료");
     }
 

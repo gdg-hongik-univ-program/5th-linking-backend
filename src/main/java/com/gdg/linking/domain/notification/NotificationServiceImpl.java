@@ -18,51 +18,57 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class NotificationServiceImpl implements NotificationService {
     private final NotificationRepository notificationRepository;
-    private final ItemRepository itemRepository;
+    // private final ItemRepository itemRepository;
     private final UserRepository userRepository;
 
     @Override
     @Transactional
-    public void createDeadlineNotifications() {
-        // 오늘 날짜 계산
-        LocalDate today = LocalDate.now();
+    public void scheduleDeadlineNotifications(Item item) {
+        LocalDate deadline = item.getDeadline();
+        if (deadline == null) return;
 
-        // 알림 생성 로직 실행
-        checkAndCreate(today.plusDays(7), "7일 남았어요", "D-7");
-        checkAndCreate(today.plusDays(3), "3일 남았어요", "D-3");
-        checkAndCreate(today.plusDays(1), "하루 남았어요", "D-1");
-        checkAndCreate(today, "오늘 마감이에요!", "D-DAY");
+        // D-7, D-3, D-1, D-DAY 알림 예약
+        saveScheduled(item, deadline.minusDays(7), "7일 남았어요", "D-7");
+        saveScheduled(item, deadline.minusDays(3), "3일 남았어요", "D-3");
+        saveScheduled(item, deadline.minusDays(1), "하루 남았어요", "D-1");
+        saveScheduled(item, deadline, "오늘이에요!", "D-DAY");
     }
 
-    private void checkAndCreate(LocalDate targetDate, String messageTag, String type) {
-        // DB에서 특정 날짜가 마감인 아이템들을 한 번에 가져옴
-        List<Item> items = itemRepository.findByDeadlineAndStatus(targetDate, Item.ItemStatus.ACTIVE);
+    private void saveScheduled(Item item, LocalDate scheduledDate, String messageTag, String type) {
+        // 이미 날짜가 지난 알림은 생성하지 않음
+        if (scheduledDate.isBefore(LocalDate.now())) return;
 
-        for (Item item : items) {
-            Notification notification = Notification.builder()
-                    .user(item.getUser())
-                    .item(item)
-                    .type(type)
-                    .message("'" + item.getTitle() + "'의 마감일까지 " + messageTag)
-                    .isRead(false)
-                    .build();
+        Notification notification = Notification.builder()
+                .user(item.getUser())
+                .item(item)
+                .type(type)
+                .message("'" + item.getTitle() + "' 마감일이 " + messageTag)
+                .scheduledDate(scheduledDate)
+                .isRead(false)
+                .build();
+        notificationRepository.save(notification);
+    }
 
-            notificationRepository.save(notification);
-        }
+    @Override
+    @Transactional
+    public void deleteReservedNotifications(Long itemId) {
+        notificationRepository.deleteByItem_ItemIdAndIsReadFalse(itemId);
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<NotificationResponse> getNotifications(Long userId) {
-        // 최신순으로 알림 가져오기
-        return notificationRepository.findByUser_UserIdOrderByCreatedAtDesc(userId).stream()
+        // [수정] 오늘 날짜 기준으로 예약된 알림만 꺼내옴
+        return notificationRepository.findByUser_UserIdOrderByCreatedAtDesc(userId)
+                .stream()
                 .map(n -> NotificationResponse.builder()
                         .notificationId(n.getId())
                         .message(n.getMessage())
                         .type(n.getType())
                         .isRead(n.isRead())
-                        .itemId(n.getItem() != null ? n.getItem().getItemId() : null) // 사용자가 알림을 클릭했을때 해당 Item으로 넘어갈 수 있게 itemId 전달
+                        .itemId(n.getItem() != null ? n.getItem().getItemId() : null)
                         .createdAt(n.getCreatedAt())
+                        .scheduledDate(n.getScheduledDate())
                         .build())
                 .collect(Collectors.toList());
     }
@@ -96,6 +102,7 @@ public class NotificationServiceImpl implements NotificationService {
                     .type("CLEANUP") // 알림 유형 구분
                     .message("벌써 한 달의 절반이 지났어요! 저장해둔 링크들을 정리하며 생각을 비워볼까요? 🧹")
                     .isRead(false)
+                    .scheduledDate(LocalDate.now())
                     .build();
 
             notificationRepository.save(notification);

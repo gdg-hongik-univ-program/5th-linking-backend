@@ -7,6 +7,7 @@ import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
@@ -44,7 +45,11 @@ public class Notification {
     @Column(name = "is_read", nullable = false)
     private boolean isRead = false;
 
-    @CreatedDate // 알림이 생성될 때 시간을 자동으로 저장
-    @Column(name = "create_at", updatable = false)
+    // 알림 전송 예정 날짜
+    @Column(name = "scheduled_date", nullable = false)
+    private LocalDate scheduledDate;
+
+    @CreatedDate
+    @Column(name = "created_at", updatable = false, nullable = false)
     private LocalDateTime createdAt;
 }

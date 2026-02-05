@@ -5,10 +5,11 @@ import com.gdg.linking.domain.folder.FolderRepository;
 import com.gdg.linking.domain.item.dto.request.ItemCreateRequest;
 import com.gdg.linking.domain.item.dto.request.ItemUpdateRequest;
 import com.gdg.linking.domain.item.dto.response.*;
+import com.gdg.linking.domain.notification.NotificationService;
 import com.gdg.linking.domain.user.User;
 import com.gdg.linking.domain.user.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -33,6 +34,8 @@ public class ItemServiceImpl implements ItemService{
     private final ItemRepository itemRepository;
 
     private final FolderRepository folderRepository;
+
+    private final NotificationService notificationService;
 
     @Override
     @Transactional
@@ -65,6 +68,9 @@ public class ItemServiceImpl implements ItemService{
                 .importance(savedItem.isImportance())
                 .deadline(savedItem.getDeadline())
                 .build();
+
+        notificationService.scheduleDeadlineNotifications(savedItem);
+
         // 4. 저장된 정보를 바탕으로 Response 객체 생성 및 반환
         return response;
     }
@@ -101,7 +107,7 @@ public class ItemServiceImpl implements ItemService{
         Item item = itemRepository.findById(request.getItemId())
                 .orElseThrow(() -> new IllegalArgumentException("해당 아이템이 존재하지 않습니다. id=" + request.getItemId()));
 
-
+        LocalDate oldDeadline = item.getDeadline();
 
         // 데이터 업데이트
         item.update(
@@ -111,6 +117,11 @@ public class ItemServiceImpl implements ItemService{
                 request.isImportance(),
                 request.getDeadline()
         );
+
+        if (oldDeadline != null && !oldDeadline.equals(request.getDeadline())) {
+            notificationService.deleteReservedNotifications(item.getItemId());
+            notificationService.scheduleDeadlineNotifications(item);
+        }
 
 
 
@@ -138,6 +149,7 @@ public class ItemServiceImpl implements ItemService{
     @Override
     @Transactional
     public ItemDeleteResponse deleteItem(Long itemId, Long userId) {
+
         // 조회
         Item item = itemRepository.findById(itemId)
                 .orElseThrow(() -> new IllegalArgumentException("아이템을 찾을 수 없습니다."));
@@ -147,8 +159,9 @@ public class ItemServiceImpl implements ItemService{
             throw new IllegalArgumentException("삭제 권한이 없습니다.");
         }
 
-        // 삭제
-        itemRepository.delete(item);
+        notificationService.deleteReservedNotifications(itemId); // 알림 삭제
+        itemRepository.delete(item);  // Item 삭제
+
 
         ItemDeleteResponse response = ItemDeleteResponse.builder()
                         .itemId(item.getItemId())
