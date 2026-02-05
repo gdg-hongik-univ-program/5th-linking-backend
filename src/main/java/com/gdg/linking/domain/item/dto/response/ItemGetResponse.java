@@ -43,4 +43,7 @@ public class ItemGetResponse {
     @Schema(description = "저장 날짜", example = "2026-01-20T21:09:00")
     private LocalDateTime createdAt;
 
+    @Schema(description = "최근 수정/복구 날짜", example = "2026-02-05T13:19:00")
+    private LocalDateTime updatedAt;
+
 }

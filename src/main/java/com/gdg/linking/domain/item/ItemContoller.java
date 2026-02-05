@@ -59,7 +59,7 @@ public class ItemContoller {
 
     @LoginCheck
     @GetMapping("")
-    @Operation(summary = "내 아이템 목록 조회", description = "필터(deadline, importance, cleanup)를 지원합니다.")
+    @Operation(summary = "내 아이템 목록 조회", description = "필터(deadline, importance, cleanup, trash, recent)를 지원합니다.")
     public ResponseEntity<List<ItemGetResponse>> getMyItems(
             @RequestParam(value = "filter", required = false) String filter, HttpSession session) {
 
@@ -140,6 +140,26 @@ public class ItemContoller {
         ItemDeleteResponse response = itemService.deleteItem(itemId, userId);
 
         return ResponseEntity.ok(response);
+    }
+
+    // 개별 아이템 영구 삭제
+    @LoginCheck
+    @DeleteMapping("/trash/{itemId}")
+    @Operation(summary = "휴지통 아이템 개별 영구 삭제")
+    public ResponseEntity<Void> deleteOneFromTrash(@PathVariable Long itemId, HttpSession session) {
+        Long userId = getLoginUserId(session);
+        itemService.hardDeleteOne(itemId, userId);
+        return ResponseEntity.ok().build();
+    }
+
+    // 휴지통 전체 비우기
+    @LoginCheck
+    @DeleteMapping("/trash/all")
+    @Operation(summary = "휴지통 전체 비우기")
+    public ResponseEntity<Void> clearTrash(HttpSession session) {
+        Long userId = getLoginUserId(session);
+        itemService.emptyTrash(userId);
+        return ResponseEntity.ok().build();
     }
 
 
