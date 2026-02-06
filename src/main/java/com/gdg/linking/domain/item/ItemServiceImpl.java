@@ -6,6 +6,7 @@ import com.gdg.linking.domain.item.dto.request.ItemCreateRequest;
 import com.gdg.linking.domain.item.dto.request.ItemUpdateRequest;
 import com.gdg.linking.domain.item.dto.response.*;
 import com.gdg.linking.domain.notification.NotificationService;
+import com.gdg.linking.domain.profile.ProfileService;
 import com.gdg.linking.domain.user.User;
 import com.gdg.linking.domain.user.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -37,6 +38,8 @@ public class ItemServiceImpl implements ItemService{
 
     private final NotificationService notificationService;
 
+    private final ProfileService profileService;
+
     @Override
     @Transactional
     public ItemCreateResponse createItem(ItemCreateRequest request,Long userId) {
@@ -45,6 +48,7 @@ public class ItemServiceImpl implements ItemService{
         // 1. 유저 객체의 프록시(가짜 객체)를 가져옴 (DB 쿼리 안 나감)
         User user = userRepository.getReferenceById(userId);
         Folder folder = folderRepository.getReferenceById(request.getFolderId());
+
 
 
         Item item = Item.builder()
@@ -68,6 +72,12 @@ public class ItemServiceImpl implements ItemService{
                 .importance(savedItem.isImportance())
                 .deadline(savedItem.getDeadline())
                 .build();
+
+        // Item 생성 시 XP 증가
+        profileService.addExperience(userId, 10); // 기본 링크 저장 (+10 XP)
+        if (request.getMemo() != null && request.getMemo().length() >= 25) {
+            profileService.addExperience(userId, 25); // 25자 이상 메모 작성 (+25 XP)
+        }
 
         notificationService.scheduleDeadlineNotifications(savedItem);
 
@@ -281,6 +291,9 @@ public class ItemServiceImpl implements ItemService{
         }
 
         fromItem.addRelation(toItem);
+
+        // Item 관계 형성 경험치 추가 (+20 XP)
+        profileService.addExperience(fromItem.getUser().getUserId(), 20);
 
     }
 

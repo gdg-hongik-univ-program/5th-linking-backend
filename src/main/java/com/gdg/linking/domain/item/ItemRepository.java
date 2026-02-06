@@ -51,4 +51,7 @@ public interface ItemRepository extends JpaRepository<Item, Long>{
     // 특정 사용자의 아이템 중, 생성일이 특정 기간 사이인 데이터 조회
     List<Item> findByUser_UserIdAndCreatedAtBetween(
             Long userId, LocalDateTime start, LocalDateTime end);
+
+    // 사용자의 전체 Item 개수
+    long countByUser_UserIdAndStatus(Long userId, Item.ItemStatus status);
 }
