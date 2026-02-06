@@ -5,6 +5,7 @@ import com.gdg.linking.domain.user.User;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDate;
@@ -76,9 +77,13 @@ public class Item {
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
+    @LastModifiedDate // JPA Auditing으로 자동 갱신 설정
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
+
     public void restore() {
         this.status = ItemStatus.ACTIVE;
-        this.createdAt = LocalDateTime.now(); // 복구 시 시각을 현재로 갱신 (50일 기준 리셋)
+        this.updatedAt = LocalDateTime.now(); // 복구 시 시각을 현재로 갱신 (50일 기준 리셋)
         this.deletedAt = null;
     }
 

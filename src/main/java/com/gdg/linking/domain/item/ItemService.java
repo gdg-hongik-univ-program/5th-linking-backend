@@ -20,6 +20,12 @@ public interface ItemService {
 
     List<ItemGetResponse> getMyItems(Long userId, String filter);
 
+    // 휴지통 개별 아이템 영구 삭제
+    void hardDeleteOne(Long itemId, Long userId);
+
+    // 휴지통 전체 비우기
+    void emptyTrash(Long userId);
+
     void restoreItem(Long itemId, Long userId);
 
 

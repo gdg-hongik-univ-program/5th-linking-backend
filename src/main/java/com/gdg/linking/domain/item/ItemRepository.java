@@ -11,19 +11,31 @@ import java.util.List;
 
 public interface ItemRepository extends JpaRepository<Item, Long>{
 
-    // 기본 전체 조회
-    List<Item> findAllByUser_UserIdOrderByCreatedAtDesc(Long userId);
+    // 필터가 없을 때 ACTIVE 상태인 것만 최신순으로 조회
+    List<Item> findByUser_UserIdAndStatusOrderByCreatedAtDesc(Long userId, Item.ItemStatus status);
 
     // 마감 임박 (오늘 ~ 7일 뒤, ACTIVE 상태만)
     List<Item> findByUser_UserIdAndDeadlineBetweenAndStatusOrderByDeadlineAsc(
             Long userId, LocalDate start, LocalDate end, Item.ItemStatus status);
 
-    // 중요 (importance = true)
-    List<Item> findByUser_UserIdAndImportanceTrue(Long userId);
+    // 중요 표시이면서 ACTIVE 상태인 것만 조회
+    List<Item> findByUser_UserIdAndImportanceTrueAndStatus(Long userId, Item.ItemStatus status);
 
-    // 정리 대상 (50일 이전 생성/복구된 ACTIVE 아이템)
-    List<Item> findByUser_UserIdAndCreatedAtBeforeAndStatus(
+    // 청소 대상 (50일 이전 생성/복구된 ACTIVE 아이템)
+    List<Item> findByUser_UserIdAndUpdatedAtBeforeAndStatus(
             Long userId, LocalDateTime targetDate, Item.ItemStatus status);
+
+    // 휴지통 목록 조회
+    List<Item> findByUser_UserIdAndStatusOrderByDeletedAtDesc(Long userId, Item.ItemStatus status);
+
+    // 상태가 TRASH이고 deletedAt이 30일 이전인 아이템 조회
+    List<Item> findByStatusAndDeletedAtBefore(Item.ItemStatus status, LocalDate threshold);
+
+    // UserId와 Status 조회
+    List<Item> findByUser_UserIdAndStatus(Long userId, Item.ItemStatus status);
+
+    // 최신순으로 상위 8개만 조회 (ACTIVE 상태인 아이템만)
+    List<Item> findTop8ByUser_UserIdAndStatusOrderByCreatedAtDesc(Long userId, Item.ItemStatus status);
 
     @Query("SELECT i FROM Item i JOIN i.relatedItems ri WHERE ri.itemId = :itemId")
     List<Item> findItemsLinkingToMe(@Param("itemId") Long itemId);
@@ -31,6 +43,7 @@ public interface ItemRepository extends JpaRepository<Item, Long>{
     List<Item> findByFolder_fId(Long fId);
 
     List<Item> findByDeadlineAndStatus(LocalDate deadline, Item.ItemStatus status);
+
     // 특정 사용자의 아이템 중, deadline이 특정 기간 사이인 데이터 조회 (마감일순 정렬)
     List<Item> findByUser_UserIdAndDeadlineBetweenOrderByDeadlineAsc(
             Long userId, LocalDate start, LocalDate end);

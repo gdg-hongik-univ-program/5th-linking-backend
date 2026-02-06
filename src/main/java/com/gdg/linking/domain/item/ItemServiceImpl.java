@@ -94,6 +94,7 @@ public class ItemServiceImpl implements ItemService{
                 .importance(item.isImportance())
                 .deadline(item.getDeadline())
                 .createdAt(item.getCreatedAt())
+                .updatedAt(item.getUpdatedAt())
                 .build();
 
         return response;
@@ -140,6 +141,7 @@ public class ItemServiceImpl implements ItemService{
                 .deadline(item.getDeadline())
                 // 현재는 태그 기능이 미완성이므로 빈 리스트 혹은 요청받은 태그 리스트를 세팅
                 .tags(request.getTags())
+                .updatedAt(item.getUpdatedAt())
                 .build();
         return response;
 
@@ -159,8 +161,9 @@ public class ItemServiceImpl implements ItemService{
             throw new IllegalArgumentException("삭제 권한이 없습니다.");
         }
 
+
+        item.updateStatus(Item.ItemStatus.TRASH); // Item 삭제 시 상태를 ACTIVE에서 TRASH로 변경
         notificationService.deleteReservedNotifications(itemId); // 알림 삭제
-        itemRepository.delete(item);  // Item 삭제
 
 
         ItemDeleteResponse response = ItemDeleteResponse.builder()
@@ -170,32 +173,67 @@ public class ItemServiceImpl implements ItemService{
         return response;
     }
 
-    //아이템 전체 조회
+    @Override
+    @Transactional
+    public void hardDeleteOne(Long itemId, Long userId) {
+        Item item = itemRepository.findById(itemId)
+                .orElseThrow(() -> new IllegalArgumentException("아이템을 찾을 수 없습니다."));
+
+        // 본인 확인 및 휴지통 상태 확인
+        if (!item.getUser().getUserId().equals(userId)) {
+            throw new IllegalArgumentException("삭제 권한이 없습니다.");
+        }
+        if (item.getStatus() != Item.ItemStatus.TRASH) {
+            throw new IllegalArgumentException("휴지통에 있는 아이템만 영구 삭제할 수 있습니다.");
+        }
+
+        itemRepository.delete(item); // DB에서 제거
+    }
+
+    @Override
+    @Transactional
+    public void emptyTrash(Long userId) {
+        // 해당 유저의 아이템 중 상태가 TRASH인 것만 찾아서 한꺼번에 삭제
+        List<Item> trashItems = itemRepository.findByUser_UserIdAndStatus(userId, Item.ItemStatus.TRASH);
+
+        if (!trashItems.isEmpty()) {
+            itemRepository.deleteAllInBatch(trashItems);
+        }
+    }
+
+    // 내 아이템 조회
     @Override
     @Transactional
     public List<ItemGetResponse> getMyItems(Long userId, String filter) {
         List<Item> items;
 
-        // 마감 임박 (오늘 ~ 7일 뒤)
+        // 마감 임박 (최신순 + ACTIVE 조건)
         if ("deadline".equals(filter)) {
             items = itemRepository.findByUser_UserIdAndDeadlineBetweenAndStatusOrderByDeadlineAsc(
                     userId, LocalDate.now(), LocalDate.now().plusDays(7), Item.ItemStatus.ACTIVE);
         }
-        // 중요 표시 (importance == true)
+        // 중요 표시 (최신순 + ACTIVE 조건)
         else if ("importance".equals(filter)) {
-            items = itemRepository.findByUser_UserIdAndImportanceTrue(userId);
+            items = itemRepository.findByUser_UserIdAndImportanceTrueAndStatus(userId, Item.ItemStatus.ACTIVE);
         }
-        // 정리 대상 (생성/복구된 지 50일 경과)
+        // 청소 대상 (최신순 + ACTIVE 조건)
         else if ("cleanup".equals(filter)) {
-            items = itemRepository.findByUser_UserIdAndCreatedAtBeforeAndStatus(
+            items = itemRepository.findByUser_UserIdAndUpdatedAtBeforeAndStatus(
                     userId, LocalDateTime.now().minusDays(50), Item.ItemStatus.ACTIVE);
         }
-        // 필터가 없거나 기본 조회 (최신순)
+        // 휴지통 (TRASH 상태 조회 유지)
+        else if ("trash".equals(filter)) {
+            items = itemRepository.findByUser_UserIdAndStatusOrderByDeletedAtDesc(userId, Item.ItemStatus.TRASH);
+        }
+        // 최근 저장 Item 8개 조회 (최신순 + ACTIVE 조건)
+        else if ("recent".equals(filter)) {
+            items = itemRepository.findTop8ByUser_UserIdAndStatusOrderByCreatedAtDesc(userId, Item.ItemStatus.ACTIVE);
+        }
+        // 기본 조회 (최신순 + ACTIVE 조건)
         else {
-            items = itemRepository.findAllByUser_UserIdOrderByCreatedAtDesc(userId);
+            items = itemRepository.findByUser_UserIdAndStatusOrderByCreatedAtDesc(userId, Item.ItemStatus.ACTIVE);
         }
 
-        // Item 엔티티를 ItemGetResponse DTO로 변환하여 반환
         return items.stream()
                 .map(item -> ItemGetResponse.builder()
                         .itemId(item.getItemId())
@@ -206,6 +244,7 @@ public class ItemServiceImpl implements ItemService{
                         .importance(item.isImportance())
                         .deadline(item.getDeadline())
                         .createdAt(item.getCreatedAt())
+                        .updatedAt(item.getUpdatedAt())
                         .build())
                 .collect(Collectors.toList());
     }
@@ -220,7 +259,11 @@ public class ItemServiceImpl implements ItemService{
             throw new RuntimeException("권한이 없습니다."); // 보안 체크
         }
 
-        item.restore(); // 엔티티의 restore() 호출하여 50일 기준 리셋
+        item.restore(); // 상태 ACTIVE 변경 및 날짜 리셋
+
+        if (item.getDeadline() != null) {
+            notificationService.scheduleDeadlineNotifications(item);
+        }
     }
 
     @Override
@@ -300,6 +343,7 @@ public class ItemServiceImpl implements ItemService{
                         .deadline(item.getDeadline())
                         .tags(new ArrayList<>()) // 필요 시 태그 로직 추가
                         .createdAt(item.getCreatedAt())
+                        .updatedAt(item.getUpdatedAt())
                         .build())
                 .collect(Collectors.toList());
 
