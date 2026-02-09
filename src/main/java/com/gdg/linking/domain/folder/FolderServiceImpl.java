@@ -60,10 +60,24 @@ public class FolderServiceImpl implements FolderService {
         // 1. 해당 유저의 모든 폴더를 한 번에 조회
         List<Folder> allFolders = folderRepository.findByUser_UserId(userId);
 
+        // 1-1.해당 폴더의 아이탬 갯수를 별도로 조회
+        List<Object[]> counts = folderRepository.countItemsByUserId(userId);
+
+        // 1-2.
+        // 조회한 아이템 갯수 데이터를 Map<FolderId, Count> 형태로 변환하여 메모리에 저장
+        Map<Long, Integer> itemCountMap = counts.stream()
+                .collect(Collectors.toMap(
+                        row -> (Long) row[0],                // key: folderId
+                        row -> ((Long) row[1]).intValue()    // value: count
+                ));
+
         // 2. Folder 엔티티를 FolderResponse DTO로 변환하여 Map에 저장
         Map<Long, FolderResponse> responseMap = allFolders.stream()
-                .map(this::convertToResponse)
+                .map(folder -> convertToResponse(folder, itemCountMap))
                 .collect(Collectors.toMap(FolderResponse::getFolderId, Function.identity()));
+
+
+
 
         // 3. 최상위 폴더들을 담을 리스트
         List<FolderResponse> rootFolders = new ArrayList<>();
@@ -111,7 +125,7 @@ public class FolderServiceImpl implements FolderService {
         folderRepository.deleteById(folderId);
     }
 
-    private FolderResponse convertToResponse(Folder folder) {
+    private FolderResponse convertToResponse(Folder folder, Map<Long, Integer> itemCountMap ) {
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime createdAt = folder.getCreatedAt();
 
@@ -126,6 +140,10 @@ public class FolderServiceImpl implements FolderService {
             }
         }
 
+        // Map에서 해당 폴더의 아이템 개수를 꺼냄 (없으면 0)
+        // DB 접근 없이 메모리 조회
+        int itemCount = itemCountMap.getOrDefault(folder.getFId(), 0);
+
         return FolderResponse.builder()
                 .folderId(folder.getFId())
                 .folderName(folder.getFolderName())
@@ -134,7 +152,7 @@ public class FolderServiceImpl implements FolderService {
                 .displayTime(displayTime)
                 .childCount(folder.getChildFolders().size())
                 //item 갯수 조회
-                .itemCount(folder.getItems().size())
+                .itemCount(itemCount)
                 .children(new ArrayList<>())
                 .build();
     }
