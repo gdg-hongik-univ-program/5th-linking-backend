@@ -187,7 +187,7 @@ public class ItemContoller {
 
     @LoginCheck
     @Operation(summary = "연관 링크 목록 조회", description = "특정 아이템에 연결된 모든 연관 링크를 조회합니다.")
-    @GetMapping("/link/{itemId}")
+    @GetMapping("/connect/{itemId}")
     public ResponseEntity<List<RelatedItemResponse>> linkItem(@PathVariable Long itemId){
 
         List<RelatedItemResponse> response = itemService.getAllRelatedLinks(itemId);
@@ -196,7 +196,7 @@ public class ItemContoller {
     }
     @LoginCheck
     @Operation(summary = "연관 링크 등록", description = "두 아이템 사이에 연관 관계를 생성합니다.")
-    @PostMapping("/link")
+    @PostMapping("/connect")
     public ResponseEntity<List<RelatedItemResponse>> linkItem(@RequestBody RelatedItemRequest request){
 
         itemService.addRelatedLink(request.getItemId(), request.getLinkItemId());
@@ -211,7 +211,7 @@ public class ItemContoller {
 
     @LoginCheck
     @Operation(summary = "연관 링크 해제", description = "두 아이템 사이의 연관 관계를 삭제합니다.")
-    @DeleteMapping("/link")
+    @DeleteMapping("/connect")
     public ResponseEntity<List<RelatedItemResponse>> linkItem(@RequestBody RelatedDeleteRequest request,
                                          HttpSession session){
 
@@ -223,6 +223,22 @@ public class ItemContoller {
 
 
         return ResponseEntity.ok(updatedList);
+    }
+
+    @LoginCheck
+    @Operation(summary = "아이템 중요도 수정", description = "아이템의 중요도(importance) 상태를 토글하거나 직접 설정합니다.")
+    @PatchMapping("/{itemId}")
+    public ResponseEntity<ItemUpdateResponse> updateImportance(
+            @PathVariable("itemId") Long itemId,
+            @RequestBody Map<String, Boolean> payload,
+            HttpSession session) {
+
+        Long userId = getLoginUserId(session);
+        boolean importance = payload.get("importance");
+
+        ItemUpdateResponse response = itemService.updateImportance(itemId, userId, importance);
+
+        return ResponseEntity.ok(response);
     }
 
 }

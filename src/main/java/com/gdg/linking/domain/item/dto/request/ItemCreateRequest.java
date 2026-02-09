@@ -1,10 +1,13 @@
 package com.gdg.linking.domain.item.dto.request;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 @Getter
 @NoArgsConstructor
@@ -17,8 +20,8 @@ public class ItemCreateRequest {
     @Schema(description = "아이템 제목", example = "구글 메인 페이지")
     private String title;
 
-    @Schema(description = "저장할 폴더 ID ", example = "1")
-    private Long folderId;
+    @Schema(description = "저장할 폴더 ID ", example = "운동")
+    private String folderName;
 
     @Schema(description = "메모 내용", example = "나중에 읽어볼 유용한 링크")
     private String memo;
@@ -28,4 +31,7 @@ public class ItemCreateRequest {
 
     @Schema(description = "마감 기한 (ISO 날짜 형식)", example = "2026-01-20", type = "string", pattern = "yyyy-MM-dd")
     private LocalDate deadline;
+
+    @Schema(description = "아이템에 추가할 태그 리스트", example = "[\"공부\", \"자바\", \"Spring\"]")
+    private List<String> tags = new ArrayList<>();
 }

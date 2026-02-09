@@ -7,6 +7,9 @@ import com.gdg.linking.domain.item.dto.request.ItemUpdateRequest;
 import com.gdg.linking.domain.item.dto.response.*;
 import com.gdg.linking.domain.notification.NotificationService;
 import com.gdg.linking.domain.profile.ProfileService;
+import com.gdg.linking.domain.tag.ItemTag;
+import com.gdg.linking.domain.tag.Tag;
+import com.gdg.linking.domain.tag.TagRepository;
 import com.gdg.linking.domain.user.User;
 import com.gdg.linking.domain.user.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -40,6 +43,9 @@ public class ItemServiceImpl implements ItemService{
 
     private final ProfileService profileService;
 
+    private final TagRepository tagRepository;
+
+
     @Override
     @Transactional
     public ItemCreateResponse createItem(ItemCreateRequest request,Long userId) {
@@ -47,7 +53,15 @@ public class ItemServiceImpl implements ItemService{
 
         // 1. 유저 객체의 프록시(가짜 객체)를 가져옴 (DB 쿼리 안 나감)
         User user = userRepository.getReferenceById(userId);
-        Folder folder = folderRepository.getReferenceById(request.getFolderId());
+        // 폴더 이름으로 찾고, 없으면 즉시 생성하여 저장
+        Folder folder = folderRepository.findByFolderNameAndUser(request.getFolderName(), user)
+                .orElseGet(() -> {
+                    Folder newFolder = Folder.builder()
+                            .folderName(request.getFolderName())
+                            .user(user)
+                            .build();
+                    return folderRepository.save(newFolder);
+                });
 
 
 
@@ -62,15 +76,40 @@ public class ItemServiceImpl implements ItemService{
                 .deadline(request.getDeadline())
                 .build();
 
+        // 2. 태그 처리 로직 (핵심)
+        if (request.getTags() != null && !request.getTags().isEmpty()) {
+            for (String tagName : request.getTags()) {
+                // 공백 제거
+                String refinedTagName = tagName.trim();
+                if(refinedTagName.isEmpty()) continue;
+
+                // A. 태그 찾기 or 생성하기 (Find or Create)
+                Tag tag = tagRepository.findByTagName(refinedTagName)
+                        .orElseGet(() -> tagRepository.save(
+                                Tag.builder().tagName(refinedTagName).build()
+                        ));
+
+                // B. ItemTag 연결 객체 생성 (ItemTag.createItemTag 사용)
+                // 주의: ItemTag 엔티티에 createItemTag 메서드가 static으로 있어야 함
+                ItemTag itemTag = ItemTag.createItemTag(item, tag);
+
+                // C. 아이템의 리스트에 추가
+                item.addItemTag(itemTag);
+            }
+        }
+
         // 3. 리포지토리에 저장
         Item savedItem = itemRepository.save(item);
         ItemCreateResponse response = ItemCreateResponse.builder()
                 .itemId(savedItem.getItemId())
-                .folderId(folder.getFId()) // 위에서 추출한 ID 값 세팅
+                .folderName(folder.getFolderName()) // 위에서 추출한 Name값 세팅
                 .title(savedItem.getTitle())
                 .memo(savedItem.getMemo())
                 .importance(savedItem.isImportance())
                 .deadline(savedItem.getDeadline())
+                .tags(savedItem.getItemTags().stream()
+                        .map(it -> it.getTag().getTagName())
+                        .collect(Collectors.toList()))
                 .build();
 
         // Item 생성 시 XP 증가
@@ -98,12 +137,15 @@ public class ItemServiceImpl implements ItemService{
 
         ItemGetResponse response = ItemGetResponse.builder()
                 .url(item.getUrl())
-                .folderId(item.getFolder().getFId()) // 위에서 추출한 ID 값 세팅
+                .folderName(item.getFolder() != null ? item.getFolder().getFolderName() : "미지정")// 위에서 추출한 Name 값 세팅
                 .title(item.getTitle())
                 .memo(item.getMemo())
                 .importance(item.isImportance())
                 .deadline(item.getDeadline())
                 .createdAt(item.getCreatedAt())
+                .tags(item.getItemTags().stream()
+                        .map(it -> it.getTag().getTagName())
+                        .collect(Collectors.toList()))
                 .updatedAt(item.getUpdatedAt())
                 .build();
 
@@ -129,6 +171,7 @@ public class ItemServiceImpl implements ItemService{
                 request.getDeadline()
         );
 
+
         if (oldDeadline != null && !oldDeadline.equals(request.getDeadline())) {
             notificationService.deleteReservedNotifications(item.getItemId());
             notificationService.scheduleDeadlineNotifications(item);
@@ -138,22 +181,24 @@ public class ItemServiceImpl implements ItemService{
 
         // 태그 업데이트 (태그는 보통 별도의 연관관계 처리가 필요합니다)
         // updateTags(item, request.getTags());
-
+        // 3. 태그 업데이트 (전체 삭제 후 재등록 방식)
+        updateTags(item, request.getTags());
 
         itemRepository.save(item);
-
-        ItemUpdateResponse response = ItemUpdateResponse.builder()
+        // 4. 응답 DTO 생성
+        return ItemUpdateResponse.builder()
                 .itemId(item.getItemId())
                 .url(item.getUrl())
                 .title(item.getTitle())
                 .memo(item.getMemo())
                 .importance(item.isImportance())
                 .deadline(item.getDeadline())
-                // 현재는 태그 기능이 미완성이므로 빈 리스트 혹은 요청받은 태그 리스트를 세팅
-                .tags(request.getTags())
+                .tags(item.getItemTags().stream()
+                        .map(it -> it.getTag().getTagName())
+                        .collect(Collectors.toList()))
                 .updatedAt(item.getUpdatedAt())
                 .build();
-        return response;
+
 
     }
 
@@ -249,10 +294,13 @@ public class ItemServiceImpl implements ItemService{
                         .itemId(item.getItemId())
                         .url(item.getUrl())
                         .title(item.getTitle())
-                        .folderId(item.getFolder() != null ? item.getFolder().getFId() : null)
+                        .folderName(item.getFolder() != null ? item.getFolder().getFolderName() : null)
                         .memo(item.getMemo())
                         .importance(item.isImportance())
                         .deadline(item.getDeadline())
+                        .tags(item.getItemTags().stream()
+                                .map(it -> it.getTag().getTagName())
+                                .collect(Collectors.toList()))
                         .createdAt(item.getCreatedAt())
                         .updatedAt(item.getUpdatedAt())
                         .build())
@@ -354,7 +402,9 @@ public class ItemServiceImpl implements ItemService{
                         .memo(item.getMemo())
                         .importance(item.isImportance())
                         .deadline(item.getDeadline())
-                        .tags(new ArrayList<>()) // 필요 시 태그 로직 추가
+                        .tags(item.getItemTags().stream() // ItemTag 리스트를 String 리스트로 변환
+                                .map(it -> it.getTag().getTagName())
+                                .collect(Collectors.toList()))
                         .createdAt(item.getCreatedAt())
                         .updatedAt(item.getUpdatedAt())
                         .build())
@@ -363,4 +413,47 @@ public class ItemServiceImpl implements ItemService{
         return response;
     }
 
+
+    // 태그 교체 전용 프라이빗 메서드
+    private void updateTags(Item item, List<String> newTagNames) {
+        // A. 기존 연결 고리 제거 (CascadeType.ALL과 orphanRemoval=true 설정 시 DB에서도 삭제됨)
+        item.getItemTags().clear();
+
+        // B. 새로운 태그 리스트가 있다면 재등록
+        if (newTagNames != null && !newTagNames.isEmpty()) {
+            for (String name : newTagNames) {
+                String trimmedName = name.trim();
+                if (trimmedName.isEmpty()) continue;
+
+                // 태그 찾기 or 생성
+                Tag tag = tagRepository.findByTagName(trimmedName)
+                        .orElseGet(() -> tagRepository.save(
+                                Tag.builder().tagName(trimmedName).build()
+                        ));
+
+                // 새로운 연결고리 생성 및 추가
+                ItemTag itemTag = ItemTag.createItemTag(item, tag);
+                item.addItemTag(itemTag);
+            }
+        }
+    }
+
+    @Override
+    @Transactional
+    public ItemUpdateResponse updateImportance(Long itemId, Long userId, boolean importance) {
+        Item item = itemRepository.findById(itemId)
+                .orElseThrow(()-> new IllegalArgumentException("아이템을 찾을 수 없습니다"));
+        // 3. 엔티티의 메서드 호출 (상태 변경)
+        item.toggleImportance();
+
+        // 4. 응답 DTO 반환 (변경된 상태 반영)
+        return ItemUpdateResponse.builder()
+                .itemId(item.getItemId())
+                .importance(item.isImportance())
+                .updatedAt(item.getUpdatedAt())
+                .build();
+    }
+
 }
+
+

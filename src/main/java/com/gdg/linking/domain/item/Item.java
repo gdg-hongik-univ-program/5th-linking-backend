@@ -1,6 +1,7 @@
 package com.gdg.linking.domain.item;
 
 import com.gdg.linking.domain.folder.Folder;
+import com.gdg.linking.domain.tag.ItemTag;
 import com.gdg.linking.domain.user.User;
 import jakarta.persistence.*;
 import lombok.*;
@@ -40,16 +41,14 @@ public class Item {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "f_id")
     private Folder folder;
-    
-    //태그기능 미완성
-//    @ManyToMany
-//    @JoinTable(
-//            name = "item_tag_map", // 연결 테이블 이름
-//            joinColumns = @JoinColumn(name = "item_id"), // Item 쪽 외래키
-//            inverseJoinColumns = @JoinColumn(name = "tag_id") // Tag 쪽 외래키
-//    )
-//    @Builder.Default // 빌더 패턴 사용 시 리스트가 null이 되지 않게 방지
-//    private List<Tag> tags = new ArrayList<>();
+
+
+    //ItemTag 테이블 연결
+    //빌더를 통해 객체를 만들때에도 자동으로 초기화 해주는 코드
+    //orphanRemoval 고아 객체 삭제
+    @Builder.Default
+    @OneToMany(mappedBy = "item",   cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ItemTag> itemTags = new ArrayList<>();
 
     @Column(name = "url")
     private String url;
@@ -126,4 +125,14 @@ public class Item {
         }
     }
 
+    // Item 엔티티와 tag와 연결하기
+    public void addItemTag(ItemTag itemTag) {
+        this.itemTags.add(itemTag); // 자바 객체 세상에서의 동기화
+        itemTag.setItem(this);     // 실제 DB FK 권한을 가진 주인에게 세팅 (중요!)
+    }
+
+    // Item 중요도 즉각 반영
+    public void toggleImportance() {
+        this.importance = !this.importance;
+    }
 }

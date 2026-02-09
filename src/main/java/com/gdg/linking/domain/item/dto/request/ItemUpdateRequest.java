@@ -21,7 +21,7 @@ public class ItemUpdateRequest {
     @Schema(description = "수정된 제목", example = "수정된 제목")
     private String title;
 
-    @Schema(description = "수정된 태그 ID 리스트", example = "[\"1\", \"2\"]")
+    @Schema(description = "수정된 태그 ID 리스트", example = "[\"프론트엔드\", \"리액트\"]")
     private List<String> tags;
 
     @Schema(description = "수정된 메모", example = "수정된 메모")

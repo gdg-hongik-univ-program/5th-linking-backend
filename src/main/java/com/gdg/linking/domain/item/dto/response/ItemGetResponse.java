@@ -25,8 +25,8 @@ public class ItemGetResponse {
     @Schema(description = "아이템 제목", example = "최강록의 조리법")
     private String title;
 
-    @Schema(description = "소속된 폴더 ID (미지정 시 null)", example = "1")
-    private Long folderId;
+    @Schema(description = "소속된 폴더 이름 (미지정 시 null)", example = "운동")
+    private String folderName;
 
     @Schema(description = "연관된 태그 이름 리스트", example = "[\"요리\", \"레시피\"]")
     private List<String> tags;
@@ -45,5 +45,6 @@ public class ItemGetResponse {
 
     @Schema(description = "최근 수정/복구 날짜", example = "2026-02-05T13:19:00")
     private LocalDateTime updatedAt;
+
 
 }

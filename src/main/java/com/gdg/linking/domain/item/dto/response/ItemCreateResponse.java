@@ -8,6 +8,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @Getter
 @Builder
@@ -22,8 +23,8 @@ public class ItemCreateResponse {
         @Schema(description = "저장된 아이템 제목", example = "구글 메인 페이지")
         private String title;
 
-        @Schema(description = "소속된 폴더 ID (미지정 시 null)", example = "1")
-        private Long folderId;
+        @Schema(description = "소속된 폴더 이름", example = "운동")
+        private String folderName;
 
         @Schema(description = "메모 내용", example = "나중에 읽어볼 유용한 링크")
         private String memo;
@@ -33,6 +34,9 @@ public class ItemCreateResponse {
 
         @Schema(description = "설정된 마감 기한", example = "2026-01-20")
         private LocalDate deadline;
+
+        @Schema(description = "아이템에 연결된 태그 이름 리스트", example = "[\"요리\", \"레시피\"]")
+        private List<String> tags;
 
     public ItemCreateResponse(Long itemId, Folder folder, String title, String memo, boolean importance, LocalDate deadline) {
     }

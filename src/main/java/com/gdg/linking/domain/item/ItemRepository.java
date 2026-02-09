@@ -12,6 +12,13 @@ import java.util.List;
 public interface ItemRepository extends JpaRepository<Item, Long>{
 
     // 필터가 없을 때 ACTIVE 상태인 것만 최신순으로 조회
+    //N+1문제 해결을 위한 코드
+    @Query("select distinct i from Item i " +
+            "left join fetch i.folder " +
+            "left join fetch i.itemTags it " +
+            "left join fetch it.tag " +
+            "where i.user.userId = :userId and i.status = :status " +
+            "order by i.createdAt desc")
     List<Item> findByUser_UserIdAndStatusOrderByCreatedAtDesc(Long userId, Item.ItemStatus status);
 
     // 마감 임박 (오늘 ~ 7일 뒤, ACTIVE 상태만)

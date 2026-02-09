@@ -37,4 +37,6 @@ public interface ItemService {
 
 
     List<ItemGetResponse> getByFolderId(Long folderId);
+
+    ItemUpdateResponse updateImportance(Long itemId, Long userId, boolean importance);
 }
