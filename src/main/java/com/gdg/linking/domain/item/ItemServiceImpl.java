@@ -139,6 +139,7 @@ public class ItemServiceImpl implements ItemService{
         ItemGetResponse response = ItemGetResponse.builder()
                 .url(item.getUrl())
                 .folderName(item.getFolder() != null ? item.getFolder().getFolderName() : "미지정")// 위에서 추출한 Name 값 세팅
+                .folderId(item.getFolder() != null ? item.getFolder().getFId() : null)// 위에서 추출한 Name 값 세팅
                 .title(item.getTitle())
                 .memo(item.getMemo())
                 .importance(item.isImportance())
