@@ -104,6 +104,7 @@ public class ItemServiceImpl implements ItemService{
                 .itemId(savedItem.getItemId())
                 .folderName(folder.getFolderName()) // 위에서 추출한 Name값 세팅
                 .title(savedItem.getTitle())
+                .folderId(folder.getFId())
                 .memo(savedItem.getMemo())
                 .importance(savedItem.isImportance())
                 .deadline(savedItem.getDeadline())
