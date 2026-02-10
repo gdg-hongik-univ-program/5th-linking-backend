@@ -59,7 +59,7 @@ public class ItemContoller {
 
     @LoginCheck
     @GetMapping("")
-    @Operation(summary = "내 아이템 목록 조회", description = "필터(deadline, importance, cleanup, trash, recent)를 지원합니다.")
+    @Operation(summary = "내 아이템 목록 조회", description = "필터(upcoming, important, stale, trash, recent)를 지원합니다.")
     public ResponseEntity<List<ItemGetResponse>> getMyItems(
             @RequestParam(value = "filter", required = false) String filter, HttpSession session) {
 
@@ -240,5 +240,22 @@ public class ItemContoller {
 
         return ResponseEntity.ok(response);
     }
+
+    @LoginCheck
+    @Operation(summary = "아이템 중요도 수정", description = "아이템의 중요도(importance) 상태를 토글하거나 직접 설정합니다.")
+    @PatchMapping("/folder/{itemId}")
+    public ResponseEntity<ItemUpdateResponse> updateItemFolder(
+            @PathVariable("itemId") Long itemId,
+            @RequestBody Map<String, Boolean> payload,
+            HttpSession session) {
+
+        Long userId = getLoginUserId(session);
+        boolean importance = payload.get("importance");
+
+        ItemUpdateResponse response = itemService.updateImportance(itemId, userId, importance);
+
+        return ResponseEntity.ok(response);
+    }
+
 
 }

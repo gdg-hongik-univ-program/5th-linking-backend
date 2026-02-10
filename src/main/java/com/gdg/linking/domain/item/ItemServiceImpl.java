@@ -53,8 +53,8 @@ public class ItemServiceImpl implements ItemService{
 
         // 1. 유저 객체의 프록시(가짜 객체)를 가져옴 (DB 쿼리 안 나감)
         User user = userRepository.getReferenceById(userId);
-        // 폴더 이름으로 찾고, 없으면 즉시 생성하여 저장
-        Folder folder = folderRepository.findByFolderNameAndUser(request.getFolderName(), user)
+        // 폴더 Id로 찾고, 없으면 즉시 생성하여 저장
+        Folder folder = folderRepository.findByFIdAndUser(request.getFolderId(), user)
                 .orElseGet(() -> {
                     Folder newFolder = Folder.builder()
                             .folderName(request.getFolderName())

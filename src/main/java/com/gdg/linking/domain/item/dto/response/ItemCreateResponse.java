@@ -23,6 +23,9 @@ public class ItemCreateResponse {
         @Schema(description = "저장된 아이템 제목", example = "구글 메인 페이지")
         private String title;
 
+        @Schema(description = "저장할 폴더 ID ", example = "1")
+        private Long folderId;
+
         @Schema(description = "소속된 폴더 이름", example = "운동")
         private String folderName;
 

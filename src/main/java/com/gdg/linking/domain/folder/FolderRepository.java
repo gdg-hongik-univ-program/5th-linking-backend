@@ -19,6 +19,7 @@ public interface FolderRepository extends JpaRepository<Folder, Long> {
     @Query("SELECT f.fId, COUNT(i) FROM Folder f LEFT JOIN f.items i WHERE f.user.userId = :userId GROUP BY f.fId")
     List<Object[]> countItemsByUserId(@Param("userId") Long userId);
 
-
-    Optional<Folder> findByFolderNameAndUser(String folderName, User user);
+    //fid와 userId로 탐색
+    @Query("SELECT f FROM Folder f WHERE f.fId = :fId AND f.user = :user")
+    Optional<Folder> findByFIdAndUser(@Param("fId") Long fId, @Param("user") User user);
 }
