@@ -263,16 +263,16 @@ public class ItemServiceImpl implements ItemService{
         List<Item> items;
 
         // 마감 임박 (최신순 + ACTIVE 조건)
-        if ("deadline".equals(filter)) {
+        if ("upcoming".equals(filter)) {
             items = itemRepository.findByUser_UserIdAndDeadlineBetweenAndStatusOrderByDeadlineAsc(
                     userId, LocalDate.now(), LocalDate.now().plusDays(7), Item.ItemStatus.ACTIVE);
         }
         // 중요 표시 (최신순 + ACTIVE 조건)
-        else if ("importance".equals(filter)) {
+        else if ("important".equals(filter)) {
             items = itemRepository.findByUser_UserIdAndImportanceTrueAndStatus(userId, Item.ItemStatus.ACTIVE);
         }
         // 청소 대상 (최신순 + ACTIVE 조건)
-        else if ("cleanup".equals(filter)) {
+        else if ("stale".equals(filter)) {
             items = itemRepository.findByUser_UserIdAndUpdatedAtBeforeAndStatus(
                     userId, LocalDateTime.now().minusDays(50), Item.ItemStatus.ACTIVE);
         }
