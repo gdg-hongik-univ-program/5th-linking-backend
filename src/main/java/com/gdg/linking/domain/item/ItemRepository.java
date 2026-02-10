@@ -1,6 +1,9 @@
 package com.gdg.linking.domain.item;
 
 import com.gdg.linking.domain.item.dto.response.ItemGetResponse;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -61,4 +64,17 @@ public interface ItemRepository extends JpaRepository<Item, Long>{
 
     // 사용자의 전체 Item 개수
     long countByUser_UserIdAndStatus(Long userId, Item.ItemStatus status);
+
+
+    @Query("SELECT DISTINCT i FROM Item i " +
+            "LEFT JOIN i.folder f " +
+            "LEFT JOIN i.itemTags it " +
+            "LEFT JOIN it.tag t " +
+            "WHERE i.user.userId = :userId " +
+            "AND (i.title LIKE %:keyword% " +
+            "OR f.folderName LIKE %:keyword% " +
+            "OR t.tagName LIKE %:keyword%)")
+    Slice<Item> searchItemsByKeyword(@Param("userId") Long userId,
+                                     @Param("keyword") String keyword,
+                                     Pageable pageable);
 }

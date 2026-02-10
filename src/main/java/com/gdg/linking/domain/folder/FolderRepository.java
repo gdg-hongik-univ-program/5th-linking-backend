@@ -1,6 +1,8 @@
 package com.gdg.linking.domain.folder;
 
 import com.gdg.linking.domain.user.User;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -21,4 +23,7 @@ public interface FolderRepository extends JpaRepository<Folder, Long> {
 
 
     Optional<Folder> findByFolderNameAndUser(String folderName, User user);
+
+    //폴더 이름 검색
+    Slice<Folder> findByUser_UserIdAndFolderNameContaining(Long userId, String keyword, PageRequest pageRequest);
 }
