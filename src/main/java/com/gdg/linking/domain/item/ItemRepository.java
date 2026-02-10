@@ -47,7 +47,7 @@ public interface ItemRepository extends JpaRepository<Item, Long>{
     @Query("SELECT i FROM Item i JOIN i.relatedItems ri WHERE ri.itemId = :itemId")
     List<Item> findItemsLinkingToMe(@Param("itemId") Long itemId);
 
-    List<Item> findByFolder_fId(Long fId);
+    List<Item> findByFolder_fIdAndStatus(Long fId,Item.ItemStatus status);
 
     List<Item> findByDeadlineAndStatus(LocalDate deadline, Item.ItemStatus status);
 

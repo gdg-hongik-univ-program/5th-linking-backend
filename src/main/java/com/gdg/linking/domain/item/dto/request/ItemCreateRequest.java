@@ -21,7 +21,7 @@ public class ItemCreateRequest {
     private String title;
 
     @Schema(description = "저장할 폴더 ID ", example = "1")
-    private Long folderId;
+    private Long folderId  ;
 
     @Schema(description = "저장할 폴더 name ", example = "운동")
     private String folderName;

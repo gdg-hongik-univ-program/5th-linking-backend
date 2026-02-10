@@ -137,6 +137,7 @@ public class ItemServiceImpl implements ItemService{
 
 
         ItemGetResponse response = ItemGetResponse.builder()
+                .itemId(item.getItemId())
                 .url(item.getUrl())
                 .folderName(item.getFolder() != null ? item.getFolder().getFolderName() : "미지정")// 위에서 추출한 Name 값 세팅
                 .folderId(item.getFolder() != null ? item.getFolder().getFId() : null)// 위에서 추출한 Name 값 세팅
@@ -394,7 +395,7 @@ public class ItemServiceImpl implements ItemService{
     public List<ItemGetResponse> getByFolderId(Long fId) {
 
 
-        List<Item> items = itemRepository.findByFolder_fId(fId);
+        List<Item> items = itemRepository.findByFolder_fIdAndStatus(fId, Item.ItemStatus.ACTIVE);
 
         List<ItemGetResponse> response = items.stream()
                 .map(item -> ItemGetResponse.builder()

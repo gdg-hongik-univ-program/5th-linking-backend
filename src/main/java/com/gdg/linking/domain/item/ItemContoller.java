@@ -59,7 +59,7 @@ public class ItemContoller {
 
     @LoginCheck
     @GetMapping("")
-    @Operation(summary = "내 아이템 목록 조회", description = "필터(upcoming, important, stale, trash, recent)를 지원합니다.")
+    @Operation(summary = "내 아이템 목록 조회", description = "필터(upcoming, important, stale, trash, recent,root)를 지원합니다.")
     public ResponseEntity<List<ItemGetResponse>> getMyItems(
             @RequestParam(value = "filter", required = false) String filter, HttpSession session) {
 
