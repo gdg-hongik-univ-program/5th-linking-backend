@@ -1,6 +1,7 @@
 package com.gdg.linking.domain.folder;
 
 import com.gdg.linking.domain.folder.dto.FolderCreateRequest;
+import com.gdg.linking.domain.folder.dto.FolderMoveRequest;
 import com.gdg.linking.domain.folder.dto.FolderResponse;
 import com.gdg.linking.domain.folder.dto.FolderUpdateRequest;
 
@@ -14,4 +15,6 @@ public interface FolderService {
     FolderResponse updateFolder(Long folderId, FolderUpdateRequest request);
 
     void deleteFolder(Long folderId);
+
+    void moveFolders(FolderMoveRequest request, Long userId);
 }

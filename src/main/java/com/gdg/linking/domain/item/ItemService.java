@@ -1,6 +1,7 @@
 package com.gdg.linking.domain.item;
 
 import com.gdg.linking.domain.item.dto.request.ItemCreateRequest;
+import com.gdg.linking.domain.item.dto.request.ItemMoveRequest;
 import com.gdg.linking.domain.item.dto.request.ItemUpdateRequest;
 import com.gdg.linking.domain.item.dto.response.*;
 
@@ -39,4 +40,6 @@ public interface ItemService {
     List<ItemGetResponse> getByFolderId(Long folderId);
 
     ItemUpdateResponse updateImportance(Long itemId, Long userId, boolean importance);
+
+    void moveItemsToFolder(ItemMoveRequest request, Long userId);
 }

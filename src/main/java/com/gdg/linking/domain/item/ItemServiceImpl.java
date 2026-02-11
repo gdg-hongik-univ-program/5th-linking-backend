@@ -3,6 +3,7 @@ package com.gdg.linking.domain.item;
 import com.gdg.linking.domain.folder.Folder;
 import com.gdg.linking.domain.folder.FolderRepository;
 import com.gdg.linking.domain.item.dto.request.ItemCreateRequest;
+import com.gdg.linking.domain.item.dto.request.ItemMoveRequest;
 import com.gdg.linking.domain.item.dto.request.ItemUpdateRequest;
 import com.gdg.linking.domain.item.dto.response.*;
 import com.gdg.linking.domain.notification.NotificationService;
@@ -298,6 +299,7 @@ public class ItemServiceImpl implements ItemService{
                         .url(item.getUrl())
                         .title(item.getTitle())
                         .folderName(item.getFolder() != null ? item.getFolder().getFolderName() : null)
+                        .folderId(item.getFolder() != null ? item.getFolder().getFId() : null)
                         .memo(item.getMemo())
                         .importance(item.isImportance())
                         .deadline(item.getDeadline())
@@ -457,6 +459,36 @@ public class ItemServiceImpl implements ItemService{
                 .build();
     }
 
+    @Transactional
+    @Override
+    public void moveItemsToFolder(ItemMoveRequest request, Long userId) {
+        // 1. 목적지 폴더 조회 및 권한 확인
+        // (폴더 ID가 없거나, 본인 폴더가 아니면 예외 발생)
+        Folder folder = folderRepository.findById(request.getFolderId())
+                .orElseThrow(() -> new IllegalArgumentException("폴더를 찾을 수 없습니다."));
+
+        if (!folder.getUser().getUserId().equals(userId)) {
+            throw new IllegalArgumentException("해당 폴더에 접근 권한이 없습니다.");
+        }
+
+        // 2. 이동할 아이템들 조회
+        List<Item> items = itemRepository.findAllById(request.getItemIds());
+
+        if (items.isEmpty()) {
+            throw new IllegalArgumentException("이동할 아이템이 선택되지 않았습니다.");
+        }
+
+        // 3. 아이템 순회하며 폴더 변경
+        for (Item item : items) {
+            // 보안 체크: 내 아이템이 맞는지 확인
+            if (!item.getUser().getUserId().equals(userId)) {
+                throw new IllegalArgumentException("본인의 아이템만 이동할 수 있습니다. ID: " + item.getItemId());
+            }
+
+            // 폴더 변경 (Dirty Checking으로 인해 트랜잭션 종료 시 자동 UPDATE 쿼리 발생)
+            item.updateFolder(folder);
+        }
+    }
 }
 
 
