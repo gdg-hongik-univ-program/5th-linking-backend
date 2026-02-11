@@ -29,9 +29,15 @@ public interface ItemRepository extends JpaRepository<Item, Long>{
     // 중요 표시이면서 ACTIVE 상태인 것만 조회
     List<Item> findByUser_UserIdAndImportanceTrueAndStatus(Long userId, Item.ItemStatus status);
 
-    // 청소 대상 (50일 이전 생성/복구된 ACTIVE 아이템)
-    List<Item> findByUser_UserIdAndUpdatedAtBeforeAndStatus(
-            Long userId, LocalDateTime targetDate, Item.ItemStatus status);
+    // 청소 Item 조회 기능에서 수정된 적이 있다면 수정일 기준, 없다면 생성일 기준으로 Item을 조회
+    @Query("SELECT i FROM Item i " +
+            "WHERE i.user.userId = :userId " +
+            "AND i.status = :status " +
+            "AND (COALESCE(i.updatedAt, i.createdAt) < :targetDate)")
+    List<Item> findStaleItems(
+            @Param("userId") Long userId,
+            @Param("targetDate") LocalDateTime targetDate,
+            @Param("status") Item.ItemStatus status);
 
     // 휴지통 목록 조회
     List<Item> findByUser_UserIdAndStatusOrderByDeletedAtDesc(Long userId, Item.ItemStatus status);

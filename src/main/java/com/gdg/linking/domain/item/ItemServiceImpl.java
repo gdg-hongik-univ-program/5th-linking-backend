@@ -277,7 +277,7 @@ public class ItemServiceImpl implements ItemService{
         }
         // 청소 대상 (최신순 + ACTIVE 조건)
         else if ("stale".equals(filter)) {
-            items = itemRepository.findByUser_UserIdAndUpdatedAtBeforeAndStatus(
+            items = itemRepository.findStaleItems(
                     userId, LocalDateTime.now().minusDays(50), Item.ItemStatus.ACTIVE);
         }
         // 휴지통 (TRASH 상태 조회 유지)

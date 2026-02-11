@@ -2,6 +2,8 @@ package com.gdg.linking.domain.notification;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,6 +20,14 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
     @Modifying // 데이터를 변경(삭제)할 때 필수
     @Transactional // 삭제 작업은 트랜잭션 안에서 일어나야 함
     void deleteByItem_ItemIdAndIsReadFalse(Long itemId);
+
+    // 특정 유저의 모든 알림 삭제
+    void deleteAllByUser_UserId(Long userId);
+
+    // 특정 유저의 읽지 않은 모든 알림을 읽음 처리
+    @Modifying
+    @Query("UPDATE Notification n SET n.isRead = true WHERE n.user.userId = :userId AND n.isRead = false")
+    void markAllAsReadByUserId(@Param("userId") Long userId);
 
     // 특정 유저의 알림을 최신순(내림차순)으로 조회
     List<Notification> findByUser_UserIdOrderByCreatedAtDesc(Long userId);
