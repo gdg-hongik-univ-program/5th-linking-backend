@@ -1,6 +1,7 @@
 package com.gdg.linking.domain.item;
 
 import com.gdg.linking.domain.item.dto.response.ItemGetResponse;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -56,6 +57,7 @@ public interface ItemRepository extends JpaRepository<Item, Long>{
             Long userId, LocalDate start, LocalDate end);
 
     // 특정 사용자의 아이템 중, 생성일이 특정 기간 사이인 데이터 조회
+    @EntityGraph(attributePaths = {"itemTags"})
     List<Item> findByUser_UserIdAndCreatedAtBetween(
             Long userId, LocalDateTime start, LocalDateTime end);
 

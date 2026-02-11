@@ -135,4 +135,9 @@ public class Item {
     public void toggleImportance() {
         this.importance = !this.importance;
     }
+
+    // 폴더 이동 편의 메서드
+    public void updateFolder(Folder folder) {
+        this.folder = folder;
+    }
 }

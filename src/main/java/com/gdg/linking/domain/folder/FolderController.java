@@ -1,6 +1,7 @@
 package com.gdg.linking.domain.folder;
 
 import com.gdg.linking.domain.folder.dto.FolderCreateRequest;
+import com.gdg.linking.domain.folder.dto.FolderMoveRequest;
 import com.gdg.linking.domain.folder.dto.FolderResponse;
 import com.gdg.linking.domain.folder.dto.FolderUpdateRequest;
 import com.gdg.linking.global.aop.LoginCheck;
@@ -16,6 +17,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+
+import static com.gdg.linking.global.utils.SessionUtil.getLoginUserId;
 
 @Tag(name = "Folder", description = "폴더 관련 API")
 @RestController
@@ -107,5 +110,24 @@ public class FolderController {
     public ResponseEntity<Void> deleteFolder(@PathVariable("folder_id") Long folderId) {
         folderService.deleteFolder(folderId);
         return ResponseEntity.noContent().build();
+    }
+
+    @PatchMapping("/move")
+    @Operation(
+            summary = "폴더 이동",
+            description = "특정 폴더를 다른 폴더의 하위로 이동시킵니다. (하위 아이템 및 폴더 포함)",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "이동 성공"),
+                    @ApiResponse(responseCode = "400", description = "잘못된 요청 (순환 참조 등)")
+            }
+    )
+    public ResponseEntity<FolderResponse> moveFolder(
+            @RequestBody FolderMoveRequest request,
+            HttpSession session) {
+
+        Long userId = getLoginUserId(session);
+        folderService.moveFolders( request, userId);
+
+        return ResponseEntity.ok().build();
     }
 }

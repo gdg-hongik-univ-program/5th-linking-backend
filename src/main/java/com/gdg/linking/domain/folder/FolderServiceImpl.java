@@ -1,6 +1,7 @@
 package com.gdg.linking.domain.folder;
 
 import com.gdg.linking.domain.folder.dto.FolderCreateRequest;
+import com.gdg.linking.domain.folder.dto.FolderMoveRequest;
 import com.gdg.linking.domain.folder.dto.FolderResponse;
 import com.gdg.linking.domain.folder.dto.FolderUpdateRequest;
 import com.gdg.linking.domain.user.User;
@@ -156,4 +157,61 @@ public class FolderServiceImpl implements FolderService {
                 .children(new ArrayList<>())
                 .build();
     }
+
+
+
+
+    @Override
+    @Transactional
+    public void moveFolders(FolderMoveRequest request, Long userId) {
+        // 1. 목표 폴더(Target Parent) 조회 및 검증
+        Folder targetParent = null;
+        if (request.getParentId() != null) {
+            targetParent = folderRepository.findById(request.getParentId())
+                    .orElseThrow(() -> new IllegalArgumentException("목표 폴더를 찾을 수 없습니다."));
+
+            // 목표 폴더 권한 확인
+            if (!targetParent.getUser().getUserId().equals(userId)) {
+                throw new IllegalArgumentException("목표 폴더에 대한 권한이 없습니다.");
+            }
+        }
+
+        // 2. 이동할 폴더들(Source Folders) 조회
+        List<Folder> sourceFolders = folderRepository.findAllById(request.getFolderIds());
+
+        if (sourceFolders.isEmpty()) {
+            throw new IllegalArgumentException("이동할 폴더가 선택되지 않았습니다.");
+        }
+
+        // 3. 각 폴더에 대해 검증 및 이동 수행
+        for (Folder sourceFolder : sourceFolders) {
+            // 3-1. 권한 확인 (내 폴더가 맞는지)
+            if (!sourceFolder.getUser().getUserId().equals(userId)) {
+                throw new IllegalArgumentException("본인의 폴더만 이동할 수 있습니다. ID: " + sourceFolder.getFId());
+            }
+
+            // 3-2. 자기 자신으로 이동 방지
+            if (targetParent != null && sourceFolder.getFId().equals(targetParent.getFId())) {
+                throw new IllegalArgumentException("자기 자신을 부모로 설정할 수 없습니다.");
+            }
+
+            // 3-3. 순환 참조 방지 (내가 내 자식 밑으로 들어가는지 체크)
+            // 목표 폴더(targetParent)가 현재 이동하려는 폴더(sourceFolder)의 하위인지 확인해야 함
+            if (targetParent != null) {
+                Folder current = targetParent;
+                while (current != null) {
+                    if (current.getFId().equals(sourceFolder.getFId())) {
+                        throw new IllegalArgumentException("자신의 하위 폴더로는 이동할 수 없습니다. 폴더명: " + sourceFolder.getFolderName());
+                    }
+                    current = current.getParentFolder();
+                }
+            }
+
+            // 3-4. 부모 변경 (이동 처리)
+            sourceFolder.setParentFolder(targetParent);
+        }
+
+        // Dirty Checking으로 인해 트랜잭션 종료 시 일괄 UPDATE 쿼리 발생
+    }
+
 }

@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -83,6 +84,11 @@ public class CalendarServiceImpl implements CalendarService {
                         .memo(item.getMemo()) // DTO에 정의한 필드 추가
                         .deadline(item.getDeadline())
                         .createdAt(item.getCreatedAt())
+                        .tag(item.getItemTags() != null ?
+                                item.getItemTags().stream()
+                                        .map(itemTag -> itemTag.getTag().getTagName()) // 태그의 이름 추출
+                                        .collect(Collectors.toList())
+                                : Collections.emptyList()) // 태그가 없으면 빈 리스트 반환
                         .importance(item.isImportance())
                         .build())
                 .collect(Collectors.toList());
