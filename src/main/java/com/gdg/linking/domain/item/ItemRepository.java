@@ -77,4 +77,14 @@ public interface ItemRepository extends JpaRepository<Item, Long>{
     Slice<Item> searchItemsByKeyword(@Param("userId") Long userId,
                                      @Param("keyword") String keyword,
                                      Pageable pageable);
+
+
+    @Query("SELECT DISTINCT i FROM Item i " +
+            "JOIN i.itemTags it " + // 아이템과 태그의 연결고리(ItemTag) 조인
+            "JOIN it.tag t " +      // 실제 태그 엔티티 조인
+            "WHERE i.user.userId = :userId " +
+            "AND t.tagName LIKE %:keyword%") // 태그 이름에 키워드가 포함된 경우
+    Slice<Item> findItemsByTagName(@Param("userId") Long userId,
+                                   @Param("keyword") String keyword,
+                                   Pageable pageable);
 }
