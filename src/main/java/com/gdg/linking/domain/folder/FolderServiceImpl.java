@@ -4,9 +4,13 @@ import com.gdg.linking.domain.folder.dto.FolderCreateRequest;
 import com.gdg.linking.domain.folder.dto.FolderMoveRequest;
 import com.gdg.linking.domain.folder.dto.FolderResponse;
 import com.gdg.linking.domain.folder.dto.FolderUpdateRequest;
+import com.gdg.linking.domain.item.Item;
+import com.gdg.linking.domain.item.ItemRepository;
+import com.gdg.linking.domain.notification.NotificationService;
 import com.gdg.linking.domain.user.User;
 import com.gdg.linking.domain.user.UserRepository; // 유저 확인용
 
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,6 +28,8 @@ public class FolderServiceImpl implements FolderService {
 
     private final FolderRepository folderRepository;
     private final UserRepository userRepository;
+    private final ItemRepository itemRepository;
+    private final NotificationService notificationService;
 
     @Override
     @Transactional
@@ -59,7 +65,7 @@ public class FolderServiceImpl implements FolderService {
     @Transactional(readOnly = true) // 조회 전용이므로 readOnly 설정
     public List<FolderResponse> getFolders(Long userId) {
         // 1. 해당 유저의 모든 폴더를 한 번에 조회
-        List<Folder> allFolders = folderRepository.findByUser_UserId(userId);
+        List<Folder> allFolders = folderRepository.findByUser_UserIdAndStatus(userId, Item.ItemStatus.ACTIVE);
 
         // 1-1.해당 폴더의 아이탬 갯수를 별도로 조회
         List<Object[]> counts = folderRepository.countItemsByUserId(userId);
@@ -76,9 +82,6 @@ public class FolderServiceImpl implements FolderService {
         Map<Long, FolderResponse> responseMap = allFolders.stream()
                 .map(folder -> convertToResponse(folder, itemCountMap))
                 .collect(Collectors.toMap(FolderResponse::getFolderId, Function.identity()));
-
-
-
 
         // 3. 최상위 폴더들을 담을 리스트
         List<FolderResponse> rootFolders = new ArrayList<>();
@@ -119,11 +122,61 @@ public class FolderServiceImpl implements FolderService {
     @Override
     @Transactional
     public void deleteFolder(Long folderId) {
-        // 존재 여부 확인 후 삭제
-        if (!folderRepository.existsById(folderId)) {
-            throw new RuntimeException("삭제할 폴더가 존재하지 않습니다.");
+        // 삭제할 폴더 조회
+        Folder folder = folderRepository.findById(folderId)
+                .orElseThrow(() -> new RuntimeException("삭제할 폴더가 존재하지 않습니다."));
+
+        // 재귀적으로 상태 변경 실행
+        softDeleteRecursive(folder);
+    }
+
+    // 하위 구조를 모두 훑으며 상태를 바꾸는 헬퍼 메서드
+    private void softDeleteRecursive(Folder folder) {
+        // 현재 폴더에 포함된 모든 아이템들을 휴지통으로 이동
+        for (Item item : folder.getItems()) {
+            item.updateStatus(Item.ItemStatus.TRASH); // Item 엔티티의 기존 메서드 활용
         }
-        folderRepository.deleteById(folderId);
+
+        // 현재 폴더 자체를 휴지통으로
+        folder.updateStatus(Item.ItemStatus.TRASH);
+
+        // 모든 하위 폴더들에 대해서도 동일한 작업 수행 (재귀 호출)
+        for (Folder child : folder.getChildFolders()) {
+            softDeleteRecursive(child);
+        }
+    }
+
+    @Override
+    @Transactional
+    public void restoreItem(Long itemId, Long userId) {
+        // 복구할 아이템 조회
+        Item item = itemRepository.findById(itemId)
+                .orElseThrow(() -> new EntityNotFoundException("아이템을 찾을 수 없습니다."));
+
+        if (!item.getUser().getUserId().equals(userId)) {
+            throw new RuntimeException("권한이 없습니다.");
+        }
+
+        // 아이템 자체 복구 (상태 ACTIVE 변경 및 날짜 리셋)
+        item.restore();
+
+        // 연관 폴더 복구 로직
+        Folder folder = item.getFolder();
+        if (folder != null && folder.getStatus() == Item.ItemStatus.TRASH) {
+            // 폴더를 ACTIVE 상태로 변경
+            folder.restore();
+
+            // 부모 폴더가 여전히 휴지통에 있는 경우
+            if (folder.getParentFolder() != null && folder.getParentFolder().getStatus() == Item.ItemStatus.TRASH) {
+                // 부모 폴더와의 연결을 끊어 최상위(Root) 폴더로 이동시킴
+                folder.setParentFolder(null);
+            }
+        }
+
+        // 마감일 알림 재예약
+        if (item.getDeadline() != null) {
+            notificationService.scheduleDeadlineNotifications(item);
+        }
     }
 
     private FolderResponse convertToResponse(Folder folder, Map<Long, Integer> itemCountMap ) {

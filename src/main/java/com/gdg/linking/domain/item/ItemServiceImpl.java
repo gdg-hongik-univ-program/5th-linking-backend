@@ -64,6 +64,9 @@ public class ItemServiceImpl implements ItemService{
                     return folderRepository.save(newFolder);
                 });
 
+        if (folder.getStatus() == Item.ItemStatus.TRASH) {
+            throw new IllegalArgumentException("휴지통에 있는 폴더에는 아이템을 추가할 수 없습니다.");
+        }
 
 
         Item item = Item.builder()
@@ -254,9 +257,15 @@ public class ItemServiceImpl implements ItemService{
     public void emptyTrash(Long userId) {
         // 해당 유저의 아이템 중 상태가 TRASH인 것만 찾아서 한꺼번에 삭제
         List<Item> trashItems = itemRepository.findByUser_UserIdAndStatus(userId, Item.ItemStatus.TRASH);
+        List<Folder> trashFolders = folderRepository.findByUser_UserIdAndStatus(userId, Item.ItemStatus.TRASH);
 
         if (!trashItems.isEmpty()) {
             itemRepository.deleteAllInBatch(trashItems);
+        }
+
+        // 휴지통에 있는 폴더들을 일괄 삭제
+        if (!trashFolders.isEmpty()) {
+            folderRepository.deleteAllInBatch(trashFolders);
         }
     }
 
@@ -404,6 +413,8 @@ public class ItemServiceImpl implements ItemService{
                         .itemId(item.getItemId())
                         .url(item.getUrl())
                         .title(item.getTitle())
+                        .folderName(item.getFolder() != null ? item.getFolder().getFolderName() : null)
+                        .folderId(item.getFolder() != null ? item.getFolder().getFId() : null)
                         .memo(item.getMemo())
                         .importance(item.isImportance())
                         .deadline(item.getDeadline())
@@ -469,6 +480,10 @@ public class ItemServiceImpl implements ItemService{
 
         if (!folder.getUser().getUserId().equals(userId)) {
             throw new IllegalArgumentException("해당 폴더에 접근 권한이 없습니다.");
+        }
+
+        if (folder.getStatus() == Item.ItemStatus.TRASH) {
+            throw new IllegalArgumentException("휴지통에 있는 폴더로는 아이템을 이동할 수 없습니다.");
         }
 
         // 2. 이동할 아이템들 조회
