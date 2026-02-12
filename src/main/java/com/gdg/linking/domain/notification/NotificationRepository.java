@@ -21,17 +21,19 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
     @Transactional // 삭제 작업은 트랜잭션 안에서 일어나야 함
     void deleteByItem_ItemIdAndIsReadFalse(Long itemId);
 
-    // 특정 유저의 모든 알림 삭제
-    void deleteAllByUser_UserId(Long userId);
 
-    // 특정 유저의 읽지 않은 모든 알림을 읽음 처리
     @Modifying
-    @Query("UPDATE Notification n SET n.isRead = true WHERE n.user.userId = :userId AND n.isRead = false")
-    void markAllAsReadByUserId(@Param("userId") Long userId);
+    @Transactional
+    @Query("DELETE FROM Notification n WHERE n.user.userId = :userId AND n.scheduledDate <= :now")
+    void deleteVisibleNotificationsByUserId(@Param("userId") Long userId, @Param("now") LocalDate now);
 
-    // 특정 유저의 알림을 최신순(내림차순)으로 조회
-    List<Notification> findByUser_UserIdOrderByCreatedAtDesc(Long userId);
+    // 특정 유저에게 노출되었고 읽지 않은 알림을 읽음 처리
+    @Modifying
+    @Transactional
+    @Query("UPDATE Notification n SET n.isRead = true " +
+            "WHERE n.user.userId = :userId " +
+            "AND n.isRead = false " +
+            "AND n.scheduledDate <= :now")
+    void markVisibleNotificationsAsRead(@Param("userId") Long userId, @Param("now") LocalDate now);
 
-    // 읽지 않은 알림이 있는지 여부 확인 (빨간 점)
-    boolean existsByUser_UserIdAndIsReadFalse(Long userId);
 }

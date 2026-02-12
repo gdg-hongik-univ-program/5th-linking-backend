@@ -93,8 +93,8 @@ public class NotificationServiceImpl implements NotificationService {
     @Override
     @Transactional
     public void deleteAllNotifications(Long userId) {
-        // 해당 유저의 모든 알림 데이터를 삭제
-        notificationRepository.deleteAllByUser_UserId(userId);
+        // 해당 유저에게 노출된 알림 데이터를 삭제
+        notificationRepository.deleteVisibleNotificationsByUserId(userId, LocalDate.now());
     }
 
 
@@ -102,7 +102,9 @@ public class NotificationServiceImpl implements NotificationService {
     @Override
     @Transactional
     public void markAllAsRead(Long userId) {
-        notificationRepository.markAllAsReadByUserId(userId);
+
+        notificationRepository.markVisibleNotificationsAsRead(userId, LocalDate.now());
+
     }
 
     @Override
