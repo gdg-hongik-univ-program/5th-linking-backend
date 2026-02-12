@@ -102,7 +102,7 @@ public class FolderController {
     }
 
     @DeleteMapping("/{folder_id}")
-    @Operation(summary = "폴더 삭제", description = "폴더를 삭제합니다.")
+    @Operation(summary = "폴더 휴지통으로 이동", description = "폴더를 삭제합니다.")
     public ResponseEntity<Void> deleteFolder(@PathVariable("folder_id") Long folderId) {
         folderService.deleteFolder(folderId);
         return ResponseEntity.noContent().build();
@@ -129,7 +129,7 @@ public class FolderController {
 
     @LoginCheck
     @DeleteMapping("")
-    @Operation(summary = "폴더 대량 삭제", description = "여러 개의 폴더를 한꺼번에 휴지통으로 이동합니다.")
+    @Operation(summary = "폴더 대량 휴지통으로 이동", description = "여러 개의 폴더를 한꺼번에 휴지통으로 이동합니다.")
     public ResponseEntity<Void> deleteFolders(
             @RequestBody FolderDeleteRequest request,
             HttpSession session) {
@@ -138,5 +138,33 @@ public class FolderController {
         folderService.deleteFolders(request, userId);
 
         return ResponseEntity.noContent().build();
+    }
+
+    // FolderController.java
+
+    @LoginCheck
+    @DeleteMapping("/trash")
+    @Operation(summary = "휴지통에 있는 폴더 대량 영구 삭제", description = "휴지통에 있는 폴더들을 선택하여 영구적으로 삭제합니다. (하위 아이템 및 폴더 포함)")
+    public ResponseEntity<Void> deleteFoldersFromTrash(
+            @RequestBody FolderDeleteRequest request,
+            HttpSession session) {
+
+        Long userId = getLoginUserId(session);
+        folderService.hardDeleteFolders(request, userId);
+
+        return ResponseEntity.ok().build();
+    }
+
+    @LoginCheck
+    @PostMapping("/restore")
+    @Operation(summary = "폴더 대량 복구", description = "선택한 폴더들과 그 하위 항목들을 모두 복구합니다. (상위 폴더가 휴지통에 있으면 최상위로 이동됨)")
+    public ResponseEntity<Void> restoreFolders(
+            @RequestBody FolderDeleteRequest request,
+            HttpSession session) {
+
+        Long userId = getLoginUserId(session);
+        folderService.restoreFolders(request, userId);
+
+        return ResponseEntity.ok().build();
     }
 }

@@ -563,6 +563,32 @@ public class ItemServiceImpl implements ItemService{
         }
     }
 
+    @Override
+    @Transactional
+    public void hardDeleteItems(ItemDeleteRequest request, Long userId) {
+        // 1. 요청된 ID 목록으로 아이템 일괄 조회
+        List<Item> items = itemRepository.findAllById(request.getItemIds());
+
+        if (items.isEmpty()) {
+            throw new IllegalArgumentException("삭제할 아이템이 선택되지 않았습니다.");
+        }
+
+        for (Item item : items) {
+            // 2. 권한 확인 (본인 아이템인지)
+            if (!item.getUser().getUserId().equals(userId)) {
+                throw new IllegalArgumentException("삭제 권한이 없는 아이템이 포함되어 있습니다. ID: " + item.getItemId());
+            }
+
+            // 3. 상태 확인 (휴지통에 있는 아이템만 영구 삭제 가능)
+            if (item.getStatus() != Item.ItemStatus.TRASH) {
+                throw new IllegalArgumentException("휴지통에 있는 아이템만 영구 삭제할 수 있습니다. ID: " + item.getItemId());
+            }
+        }
+
+        // 4. DB에서 영구 삭제 (일괄 처리로 성능 최적화)
+        itemRepository.deleteAllInBatch(items);
+    }
+
 }
 
 

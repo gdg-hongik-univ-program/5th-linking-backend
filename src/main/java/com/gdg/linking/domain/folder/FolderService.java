@@ -19,4 +19,9 @@ public interface FolderService {
 
     void deleteFolders(FolderDeleteRequest request, Long userId);
 
+    void hardDeleteFolders(FolderDeleteRequest request, Long userId);
+    // 폴더 대량 복구
+    void restoreFolders(FolderDeleteRequest request, Long userId);
+
+
 }

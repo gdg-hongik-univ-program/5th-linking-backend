@@ -46,4 +46,6 @@ public interface ItemService {
 
     // 아이템 대량 복구
     void restoreItems(ItemRestoreRequest request, Long userId);
+
+    void hardDeleteItems(ItemDeleteRequest request, Long userId);
 }

@@ -290,4 +290,84 @@ public class FolderServiceImpl implements FolderService {
             }
         }
     }
+
+    @Override
+    @Transactional
+    public void hardDeleteFolders(FolderDeleteRequest request, Long userId) {
+        // 1. 요청된 ID 목록으로 폴더 일괄 조회
+        List<Folder> folders = folderRepository.findAllById(request.getFolderIds());
+
+        if (folders.isEmpty()) {
+            throw new IllegalArgumentException("삭제할 폴더가 선택되지 않았습니다.");
+        }
+
+        for (Folder folder : folders) {
+            // 2. 권한 확인 (본인 폴더인지)
+            if (!folder.getUser().getUserId().equals(userId)) {
+                throw new IllegalArgumentException("삭제 권한이 없는 폴더가 포함되어 있습니다. ID: " + folder.getFId());
+            }
+
+            // 3. 상태 확인 (휴지통에 있는 폴더만 영구 삭제 가능)
+            if (folder.getStatus() != Item.ItemStatus.TRASH) {
+                throw new IllegalArgumentException("휴지통에 있는 폴더만 영구 삭제할 수 있습니다. ID: " + folder.getFId());
+            }
+        }
+
+        // 4. DB에서 영구 삭제 (하위 폴더 및 아이템도 Cascade 설정에 의해 함께 삭제됨)
+        folderRepository.deleteAllInBatch(folders);
+    }
+
+    // FolderServiceImpl.java
+
+    @Override
+    @Transactional
+    public void restoreFolders(FolderDeleteRequest request, Long userId) {
+        // 1. 요청된 ID 목록으로 폴더 일괄 조회
+        List<Folder> folders = folderRepository.findAllById(request.getFolderIds());
+
+        if (folders.isEmpty()) {
+            throw new IllegalArgumentException("복구할 폴더가 선택되지 않았습니다.");
+        }
+
+        for (Folder folder : folders) {
+            // 2. 권한 확인
+            if (!folder.getUser().getUserId().equals(userId)) {
+                throw new IllegalArgumentException("권한이 없는 폴더가 포함되어 있습니다. ID: " + folder.getFId());
+            }
+
+            // 3. 상위 폴더 상태 체크 (고아 폴더 방지 로직)
+            // 내 부모가 존재하는데, 그 부모가 휴지통(TRASH)에 있다면? -> 연결을 끊고 최상위로 이동
+            if (folder.getParentFolder() != null && folder.getParentFolder().getStatus() == Item.ItemStatus.TRASH) {
+                folder.setParentFolder(null);
+            }
+
+            // 4. 재귀적으로 복구 수행 (자신 + 하위 아이템 + 하위 폴더)
+            restoreRecursive(folder);
+        }
+    }
+
+    // 내부 헬퍼 메서드: 하위 구조까지 모두 복구
+    private void restoreRecursive(Folder folder) {
+        // 1. 자신 복구
+        folder.restore(); // Folder.java에 정의된 메서드 (status=ACTIVE, deletedAt=null)
+
+        // 2. 내부 아이템들 복구
+        for (Item item : folder.getItems()) {
+            if (item.getStatus() == Item.ItemStatus.TRASH) {
+                item.restore();
+                // 마감 알림 등 부가 로직 필요 시 추가 (notificationService 등)
+                if (item.getDeadline() != null) {
+                    notificationService.scheduleDeadlineNotifications(item);
+                }
+            }
+        }
+
+        // 3. 하위 폴더들 복구 (재귀 호출)
+        for (Folder child : folder.getChildFolders()) {
+            if (child.getStatus() == Item.ItemStatus.TRASH) {
+                restoreRecursive(child);
+            }
+        }
+    }
+
 }

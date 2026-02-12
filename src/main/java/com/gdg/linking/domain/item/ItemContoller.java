@@ -304,6 +304,21 @@ public class ItemContoller {
         return ResponseEntity.ok().build();
     }
 
+    @LoginCheck
+    @DeleteMapping("/trash")
+    @Operation(summary = "휴지통 아이템 선택 대량 영구 삭제", description = "휴지통에 있는 아이템 중 선택한 것들을 영구적으로 삭제합니다. (복구 불가)")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "영구 삭제 성공"),
+            @ApiResponse(responseCode = "400", description = "잘못된 요청 (본인 아이템 아님, 휴지통 아님 등)")
+    })
+    public ResponseEntity<Void> deleteItemsFromTrash(
+            @RequestBody ItemDeleteRequest request,
+            HttpSession session) {
 
+        Long userId = getLoginUserId(session);
+        itemService.hardDeleteItems(request, userId);
+
+        return ResponseEntity.ok().build();
+    }
 
 }
