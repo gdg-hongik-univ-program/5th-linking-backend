@@ -94,4 +94,8 @@ public interface ItemRepository extends JpaRepository<Item, Long>{
     Slice<Item> findItemsByTagName(@Param("userId") Long userId,
                                    @Param("keyword") String keyword,
                                    Pageable pageable);
+
+
+    // [추가] 특정 사용자의 아이템 중, 폴더가 없는(NULL) 것만 최신순 조회
+    List<Item> findByUser_UserIdAndStatusAndFolderIsNullOrderByCreatedAtDesc(Long userId, Item.ItemStatus status);
 }

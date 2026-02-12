@@ -1,9 +1,6 @@
 package com.gdg.linking.domain.folder;
 
-import com.gdg.linking.domain.folder.dto.FolderCreateRequest;
-import com.gdg.linking.domain.folder.dto.FolderMoveRequest;
-import com.gdg.linking.domain.folder.dto.FolderResponse;
-import com.gdg.linking.domain.folder.dto.FolderUpdateRequest;
+import com.gdg.linking.domain.folder.dto.*;
 import com.gdg.linking.domain.item.Item;
 import com.gdg.linking.domain.item.ItemRepository;
 import com.gdg.linking.domain.notification.NotificationService;
@@ -267,4 +264,30 @@ public class FolderServiceImpl implements FolderService {
         // Dirty Checking으로 인해 트랜잭션 종료 시 일괄 UPDATE 쿼리 발생
     }
 
+    @Override
+    @Transactional
+    public void deleteFolders(FolderDeleteRequest request, Long userId) {
+        // 1. 삭제할 폴더들을 일괄 조회
+        List<Folder> folders = folderRepository.findAllById(request.getFolderIds());
+
+        if (folders.isEmpty()) {
+            throw new IllegalArgumentException("삭제할 폴더가 선택되지 않았습니다.");
+        }
+
+        for (Folder folder : folders) {
+            // 2. 권한 확인 (본인 폴더인지)
+            if (!folder.getUser().getUserId().equals(userId)) {
+                throw new IllegalArgumentException("삭제 권한이 없는 폴더가 포함되어 있습니다. ID: " + folder.getFId());
+            }
+
+            // 3. 폴더 상태를 TRASH로 변경 (Recursive)
+            // Folder 엔티티의 updateStatus가 하위 아이템들의 상태도 변경하도록 설계되어 있다면 편리합니다.
+            folder.updateStatus(Item.ItemStatus.TRASH);
+
+            // 4. 폴더 내 아이템들의 예약 알림 삭제 (필요 시)
+            for (Item item : folder.getItems()) {
+                notificationService.deleteReservedNotifications(item.getItemId());
+            }
+        }
+    }
 }

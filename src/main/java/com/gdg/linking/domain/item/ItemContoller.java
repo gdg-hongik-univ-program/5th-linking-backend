@@ -139,6 +139,24 @@ public class ItemContoller {
         return ResponseEntity.ok(response);
     }
 
+    @LoginCheck
+    @Operation(summary = "아이템 대량 삭제", description = "아이템을 휴지통으로 이동(Soft Delete)합니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "삭제 성공"),
+            @ApiResponse(responseCode = "404", description = "아이템을 찾을 수 없음"),
+            @ApiResponse(responseCode = "403", description = "삭제 권한 없음")
+    })
+    @DeleteMapping("")
+    public ResponseEntity<ItemDeleteResponse> deleteItems(
+            @RequestBody ItemDeleteRequest request,
+            HttpSession session) {
+
+        Long userId = getLoginUserId(session);
+        ItemDeleteResponse response = itemService.deleteItems(request, userId);
+
+        return ResponseEntity.ok(response);
+    }
+
     // 개별 아이템 영구 삭제
     @LoginCheck
     @DeleteMapping("/trash/{itemId}")
@@ -271,5 +289,21 @@ public class ItemContoller {
 
         return ResponseEntity.ok().build();
     }
+
+    //대량 아이템 복구 코드
+    @LoginCheck
+    @PostMapping("/restore")
+    @Operation(summary = "아이템 대량 복구", description = "여러 개의 아이템을 한꺼번에 복구합니다. (관련 폴더도 필요 시 함께 복구됨)")
+    public ResponseEntity<Void> restoreItems(
+            @RequestBody ItemRestoreRequest request,
+            HttpSession session) {
+
+        Long userId = getLoginUserId(session);
+        itemService.restoreItems(request, userId);
+
+        return ResponseEntity.ok().build();
+    }
+
+
 
 }

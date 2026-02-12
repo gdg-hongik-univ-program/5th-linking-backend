@@ -1,8 +1,6 @@
 package com.gdg.linking.domain.item;
 
-import com.gdg.linking.domain.item.dto.request.ItemCreateRequest;
-import com.gdg.linking.domain.item.dto.request.ItemMoveRequest;
-import com.gdg.linking.domain.item.dto.request.ItemUpdateRequest;
+import com.gdg.linking.domain.item.dto.request.*;
 import com.gdg.linking.domain.item.dto.response.*;
 
 import java.util.List;
@@ -42,4 +40,10 @@ public interface ItemService {
     ItemUpdateResponse updateImportance(Long itemId, Long userId, boolean importance);
 
     void moveItemsToFolder(ItemMoveRequest request, Long userId);
+
+
+    ItemDeleteResponse deleteItems(ItemDeleteRequest request, Long userId);
+
+    // 아이템 대량 복구
+    void restoreItems(ItemRestoreRequest request, Long userId);
 }
