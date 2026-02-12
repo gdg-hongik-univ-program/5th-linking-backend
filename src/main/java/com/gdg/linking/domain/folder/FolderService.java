@@ -1,9 +1,6 @@
 package com.gdg.linking.domain.folder;
 
-import com.gdg.linking.domain.folder.dto.FolderCreateRequest;
-import com.gdg.linking.domain.folder.dto.FolderMoveRequest;
-import com.gdg.linking.domain.folder.dto.FolderResponse;
-import com.gdg.linking.domain.folder.dto.FolderUpdateRequest;
+import com.gdg.linking.domain.folder.dto.*;
 
 import java.util.List;
 
@@ -19,4 +16,7 @@ public interface FolderService {
     void moveFolders(FolderMoveRequest request, Long userId);
 
     void restoreItem(Long itemId, Long userId);
+
+    void deleteFolders(FolderDeleteRequest request, Long userId);
+
 }

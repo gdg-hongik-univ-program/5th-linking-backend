@@ -2,9 +2,7 @@ package com.gdg.linking.domain.item;
 
 import com.gdg.linking.domain.folder.Folder;
 import com.gdg.linking.domain.folder.FolderRepository;
-import com.gdg.linking.domain.item.dto.request.ItemCreateRequest;
-import com.gdg.linking.domain.item.dto.request.ItemMoveRequest;
-import com.gdg.linking.domain.item.dto.request.ItemUpdateRequest;
+import com.gdg.linking.domain.item.dto.request.*;
 import com.gdg.linking.domain.item.dto.response.*;
 import com.gdg.linking.domain.notification.NotificationService;
 import com.gdg.linking.domain.profile.ProfileService;
@@ -33,7 +31,6 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class ItemServiceImpl implements ItemService{
 
-
     private final UserRepository userRepository;
 
     private final ItemRepository itemRepository;
@@ -54,17 +51,15 @@ public class ItemServiceImpl implements ItemService{
 
         // 1. 유저 객체의 프록시(가짜 객체)를 가져옴 (DB 쿼리 안 나감)
         User user = userRepository.getReferenceById(userId);
-        // 폴더 Id로 찾고, 없으면 즉시 생성하여 저장
-        Folder folder = folderRepository.findByFIdAndUser(request.getFolderId(), user)
-                .orElseGet(() -> {
-                    Folder newFolder = Folder.builder()
-                            .folderName(request.getFolderName())
-                            .user(user)
-                            .build();
-                    return folderRepository.save(newFolder);
-                });
 
-        if (folder.getStatus() == Item.ItemStatus.TRASH) {
+        Folder folder = null; // 기본값은 null
+
+        // 요청에 folderId가 포함되어 있을 때만 DB에서 조회
+        if (request.getFolderId() != null) {
+            folder = folderRepository.findByFIdAndUser(request.getFolderId(), user)
+                    .orElse(null); // 못 찾아도 에러 내지 않고 null 유지
+        }
+        if (folder != null && folder.getStatus() == Item.ItemStatus.TRASH) {
             throw new IllegalArgumentException("휴지통에 있는 폴더에는 아이템을 추가할 수 없습니다.");
         }
 
@@ -106,9 +101,9 @@ public class ItemServiceImpl implements ItemService{
         Item savedItem = itemRepository.save(item);
         ItemCreateResponse response = ItemCreateResponse.builder()
                 .itemId(savedItem.getItemId())
-                .folderName(folder.getFolderName()) // 위에서 추출한 Name값 세팅
+                .folderName(folder != null ? folder.getFolderName() : null)
+                .folderId(folder != null ? folder.getFId() : null)
                 .title(savedItem.getTitle())
-                .folderId(folder.getFId())
                 .memo(savedItem.getMemo())
                 .importance(savedItem.isImportance())
                 .deadline(savedItem.getDeadline())
@@ -296,6 +291,9 @@ public class ItemServiceImpl implements ItemService{
         // 최근 저장 Item 8개 조회 (최신순 + ACTIVE 조건)
         else if ("recent".equals(filter)) {
             items = itemRepository.findTop8ByUser_UserIdAndStatusOrderByCreatedAtDesc(userId, Item.ItemStatus.ACTIVE);
+        }
+        else if ("root".equals(filter)) {
+            items = itemRepository.findByUser_UserIdAndStatusAndFolderIsNullOrderByCreatedAtDesc(userId, Item.ItemStatus.ACTIVE);
         }
         // 기본 조회 (최신순 + ACTIVE 조건)
         else {
@@ -504,6 +502,67 @@ public class ItemServiceImpl implements ItemService{
             item.updateFolder(folder);
         }
     }
+
+    @Override
+    @Transactional
+    public ItemDeleteResponse deleteItems(ItemDeleteRequest request, Long userId) {
+
+        List<Item> items = itemRepository.findAllById(request.getItemIds());
+        for (Item item : items) {
+
+
+            item.updateStatus(Item.ItemStatus.TRASH);
+
+            // 4. 예약된 알림 삭제
+            notificationService.deleteReservedNotifications(item.getItemId());
+        }
+
+        return ItemDeleteResponse.builder()
+                .itemId(null) // 대량 삭제이므로 특정 ID 대신 메시지 중심 응답
+                .message(items.size() + "개의 아이템이 휴지통으로 이동되었습니다.")
+                .build();
+    }
+
+
+    //아이템 대량 복구
+    @Override
+    @Transactional
+    public void restoreItems(ItemRestoreRequest request, Long userId) {
+        // 1. 요청된 ID 목록으로 아이템 일괄 조회
+        List<Item> items = itemRepository.findAllById(request.getItemIds());
+
+        if (items.isEmpty()) {
+            throw new IllegalArgumentException("복구할 아이템이 선택되지 않았습니다.");
+        }
+
+        for (Item item : items) {
+            // 2. 권한 확인 (본인 아이템인지)
+            if (!item.getUser().getUserId().equals(userId)) {
+                throw new IllegalArgumentException("복구 권한이 없는 아이템이 포함되어 있습니다. ID: " + item.getItemId());
+            }
+
+            // 3. 아이템 자체 복구 (ACTIVE 상태 변경, 날짜 리셋)
+            item.restore(); // Item.java [cite] 에 정의된 메서드 사용
+
+            // 4. 연관 폴더 복구 로직 (단건 복구와 동일한 로직 적용)
+            Folder folder = item.getFolder();
+            if (folder != null && folder.getStatus() == Item.ItemStatus.TRASH) {
+                // 부모 폴더도 함께 ACTIVE로 복구
+                folder.restore();
+
+                // 만약 그 부모의 부모(조부모) 폴더가 여전히 TRASH라면 연결 끊기 (최상위로 이동)
+                if (folder.getParentFolder() != null && folder.getParentFolder().getStatus() == Item.ItemStatus.TRASH) {
+                    folder.setParentFolder(null);
+                }
+            }
+
+            // 5. 마감일 알림 재예약
+            if (item.getDeadline() != null) {
+                notificationService.scheduleDeadlineNotifications(item);
+            }
+        }
+    }
+
 }
 
 

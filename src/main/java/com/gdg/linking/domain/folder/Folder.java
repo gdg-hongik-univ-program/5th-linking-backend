@@ -27,7 +27,7 @@ public class Folder {
     @Column(name = "f_id")
     private Long fId;
 
-    @Column(name = "f_name", nullable = false, length = 45)
+    @Column(name = "f_name", nullable = true, length = 45)
     private String folderName;
 
     @ManyToOne(fetch = FetchType.LAZY) // 여러 개의 폴더가 한 명의 사용자에게 속함, 지연 로딩 권장

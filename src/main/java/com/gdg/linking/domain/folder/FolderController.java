@@ -1,9 +1,6 @@
 package com.gdg.linking.domain.folder;
 
-import com.gdg.linking.domain.folder.dto.FolderCreateRequest;
-import com.gdg.linking.domain.folder.dto.FolderMoveRequest;
-import com.gdg.linking.domain.folder.dto.FolderResponse;
-import com.gdg.linking.domain.folder.dto.FolderUpdateRequest;
+import com.gdg.linking.domain.folder.dto.*;
 import com.gdg.linking.global.aop.LoginCheck;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -74,8 +71,7 @@ public class FolderController {
     )
     public ResponseEntity<List<FolderResponse>> getFolders(HttpSession session) {
         // 세션에서 Long 타입의 userId 추출
-        Long userId = (Long) session.getAttribute("LOGIN_USER_ID");
-
+        Long userId = getLoginUserId(session);
         List<FolderResponse> folders = folderService.getFolders(userId);
         return ResponseEntity.ok(folders);
     }
@@ -129,5 +125,18 @@ public class FolderController {
         folderService.moveFolders( request, userId);
 
         return ResponseEntity.ok().build();
+    }
+
+    @LoginCheck
+    @DeleteMapping("")
+    @Operation(summary = "폴더 대량 삭제", description = "여러 개의 폴더를 한꺼번에 휴지통으로 이동합니다.")
+    public ResponseEntity<Void> deleteFolders(
+            @RequestBody FolderDeleteRequest request,
+            HttpSession session) {
+
+        Long userId = getLoginUserId(session);
+        folderService.deleteFolders(request, userId);
+
+        return ResponseEntity.noContent().build();
     }
 }
