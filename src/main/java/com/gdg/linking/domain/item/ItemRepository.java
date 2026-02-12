@@ -80,7 +80,6 @@ public interface ItemRepository extends JpaRepository<Item, Long>{
             "LEFT JOIN it.tag t " +
             "WHERE i.user.userId = :userId " +
             "AND (i.title LIKE %:keyword% " +
-            "OR f.folderName LIKE %:keyword% " +
             "OR t.tagName LIKE %:keyword%)")
     Slice<Item> searchItemsByKeyword(@Param("userId") Long userId,
                                      @Param("keyword") String keyword,
