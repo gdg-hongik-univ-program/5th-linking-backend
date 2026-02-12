@@ -36,7 +36,7 @@ public class NotificationServiceImpl implements NotificationService {
 
     private void saveScheduled(Item item, LocalDate scheduledDate, String messageTag, String type) {
         // 이미 날짜가 지난 알림은 생성하지 않음
-        if (scheduledDate.isBefore(LocalDate.now())) return;
+        if (!scheduledDate.isAfter(LocalDate.now())) return;
 
         Notification notification = Notification.builder()
                 .user(item.getUser())
@@ -59,7 +59,7 @@ public class NotificationServiceImpl implements NotificationService {
     @Transactional(readOnly = true)
     public List<NotificationResponse> getNotifications(Long userId) {
         // [수정] 오늘 날짜 기준으로 예약된 알림만 꺼내옴
-        return notificationRepository.findByUser_UserIdOrderByCreatedAtDesc(userId)
+        return notificationRepository.findByUser_UserIdAndScheduledDateLessThanEqualOrderByCreatedAtDesc(userId, LocalDate.now())
                 .stream()
                 .map(n -> NotificationResponse.builder()
                         .notificationId(n.getId())
@@ -87,6 +87,22 @@ public class NotificationServiceImpl implements NotificationService {
         // 읽음 상태 변경
         // @Transactional 어노테이션 덕분에 별도의 save() 호출 없이도 메서드가 끝날 때 Dirty Checking에 의해 DB에 자동으로 반영됩니다.
         notification.setRead(true);
+    }
+
+    // 해당 유저의 모든 알림 데이터를 삭제
+    @Override
+    @Transactional
+    public void deleteAllNotifications(Long userId) {
+        // 해당 유저의 모든 알림 데이터를 삭제
+        notificationRepository.deleteAllByUser_UserId(userId);
+    }
+
+
+    // 벌크 업데이트를 통해 한 번의 쿼리로 모든 알림을 읽음 처리
+    @Override
+    @Transactional
+    public void markAllAsRead(Long userId) {
+        notificationRepository.markAllAsReadByUserId(userId);
     }
 
     @Override

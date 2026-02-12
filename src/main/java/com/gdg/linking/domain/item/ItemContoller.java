@@ -1,10 +1,7 @@
 package com.gdg.linking.domain.item;
 
 
-import com.gdg.linking.domain.item.dto.request.ItemCreateRequest;
-import com.gdg.linking.domain.item.dto.request.ItemUpdateRequest;
-import com.gdg.linking.domain.item.dto.request.RelatedDeleteRequest;
-import com.gdg.linking.domain.item.dto.request.RelatedItemRequest;
+import com.gdg.linking.domain.item.dto.request.*;
 import com.gdg.linking.domain.item.dto.response.*;
 import com.gdg.linking.global.aop.LoginCheck;
 import io.swagger.v3.oas.annotations.Operation;
@@ -59,7 +56,7 @@ public class ItemContoller {
 
     @LoginCheck
     @GetMapping("")
-    @Operation(summary = "내 아이템 목록 조회", description = "필터(deadline, importance, cleanup, trash, recent)를 지원합니다.")
+    @Operation(summary = "내 아이템 목록 조회", description = "필터(upcoming, important, stale, trash, recent,root)를 지원합니다.")
     public ResponseEntity<List<ItemGetResponse>> getMyItems(
             @RequestParam(value = "filter", required = false) String filter, HttpSession session) {
 
@@ -239,6 +236,40 @@ public class ItemContoller {
         ItemUpdateResponse response = itemService.updateImportance(itemId, userId, importance);
 
         return ResponseEntity.ok(response);
+    }
+
+    @LoginCheck
+    @Operation(summary = "아이템 중요도 수정", description = "아이템의 중요도(importance) 상태를 토글하거나 직접 설정합니다.")
+    @PatchMapping("/folder/{itemId}")
+    public ResponseEntity<ItemUpdateResponse> updateItemFolder(
+            @PathVariable("itemId") Long itemId,
+            @RequestBody Map<String, Boolean> payload,
+            HttpSession session) {
+
+        Long userId = getLoginUserId(session);
+        boolean importance = payload.get("importance");
+
+        ItemUpdateResponse response = itemService.updateImportance(itemId, userId, importance);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @LoginCheck
+    @Operation(summary = "아이템 폴더 이동", description = "여러 아이템을 특정 폴더로 일괄 이동합니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "이동 성공"),
+            @ApiResponse(responseCode = "400", description = "잘못된 요청 (폴더 없음, 권한 없음 등)"),
+            @ApiResponse(responseCode = "401", description = "로그인 필요")
+    })
+    @PatchMapping("/move")
+    public ResponseEntity<Void> moveItems(
+            @RequestBody ItemMoveRequest request,
+            HttpSession session) {
+
+        Long userId = getLoginUserId(session);
+        itemService.moveItemsToFolder(request, userId);
+
+        return ResponseEntity.ok().build();
     }
 
 }

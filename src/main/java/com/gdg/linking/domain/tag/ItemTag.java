@@ -11,7 +11,7 @@ import lombok.*;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name ="ItemTag")
+@Table(name ="item_tag")
 public class ItemTag {
 
     @Id

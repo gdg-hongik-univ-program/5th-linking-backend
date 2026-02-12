@@ -40,4 +40,22 @@ public class NotificationController {
 
         return ResponseEntity.ok().build();
     }
+
+    @LoginCheck
+    @DeleteMapping("/all")
+    @Operation(summary = "알림 전체 삭제", description = "로그인한 유저의 모든 알림을 삭제합니다.")
+    public ResponseEntity<Void> deleteAllNotifications(HttpSession session) {
+        Long userId = (Long) session.getAttribute("LOGIN_USER_ID");
+        notificationService.deleteAllNotifications(userId);
+        return ResponseEntity.ok().build();
+    }
+
+    @LoginCheck
+    @PatchMapping("/all/read")
+    @Operation(summary = "알림 전체 읽음 처리", description = "로그인한 유저의 모든 읽지 않은 알림을 읽음 상태로 변경합니다.")
+    public ResponseEntity<Void> markAllAsRead(HttpSession session) {
+        Long userId = (Long) session.getAttribute("LOGIN_USER_ID");
+        notificationService.markAllAsRead(userId);
+        return ResponseEntity.ok().build();
+    }
 }

@@ -55,4 +55,29 @@ public class Folder {
     @OnDelete(action = OnDeleteAction.CASCADE)
     @Builder.Default
     private List<Item> items = new ArrayList<>();
+
+    @Enumerated(EnumType.STRING)
+    @Builder.Default
+    @Column(name = "status")
+    private Item.ItemStatus status = Item.ItemStatus.ACTIVE; // 기본값은 ACTIVE
+
+    @Column(name = "deleted_at")
+    private java.time.LocalDate deletedAt; // 삭제된 날짜 기록
+
+    // 상태 변경을 위한 편의 메서드
+    public void updateStatus(Item.ItemStatus status) {
+        this.status = status;
+        if (status == Item.ItemStatus.TRASH) {
+            this.deletedAt = java.time.LocalDate.now();
+        } else {
+            this.deletedAt = null;
+        }
+    }
+
+    // 복원을 위한 메소드
+    public void restore() {
+        this.status = Item.ItemStatus.ACTIVE;
+        this.deletedAt = null;
+    }
+
 }

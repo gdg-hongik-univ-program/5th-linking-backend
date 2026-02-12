@@ -3,6 +3,7 @@ package com.gdg.linking.domain.item;
 import com.gdg.linking.domain.folder.Folder;
 import com.gdg.linking.domain.folder.FolderRepository;
 import com.gdg.linking.domain.item.dto.request.ItemCreateRequest;
+import com.gdg.linking.domain.item.dto.request.ItemMoveRequest;
 import com.gdg.linking.domain.item.dto.request.ItemUpdateRequest;
 import com.gdg.linking.domain.item.dto.response.*;
 import com.gdg.linking.domain.notification.NotificationService;
@@ -53,8 +54,8 @@ public class ItemServiceImpl implements ItemService{
 
         // 1. 유저 객체의 프록시(가짜 객체)를 가져옴 (DB 쿼리 안 나감)
         User user = userRepository.getReferenceById(userId);
-        // 폴더 이름으로 찾고, 없으면 즉시 생성하여 저장
-        Folder folder = folderRepository.findByFolderNameAndUser(request.getFolderName(), user)
+        // 폴더 Id로 찾고, 없으면 즉시 생성하여 저장
+        Folder folder = folderRepository.findByFIdAndUser(request.getFolderId(), user)
                 .orElseGet(() -> {
                     Folder newFolder = Folder.builder()
                             .folderName(request.getFolderName())
@@ -63,6 +64,9 @@ public class ItemServiceImpl implements ItemService{
                     return folderRepository.save(newFolder);
                 });
 
+        if (folder.getStatus() == Item.ItemStatus.TRASH) {
+            throw new IllegalArgumentException("휴지통에 있는 폴더에는 아이템을 추가할 수 없습니다.");
+        }
 
 
         Item item = Item.builder()
@@ -104,6 +108,7 @@ public class ItemServiceImpl implements ItemService{
                 .itemId(savedItem.getItemId())
                 .folderName(folder.getFolderName()) // 위에서 추출한 Name값 세팅
                 .title(savedItem.getTitle())
+                .folderId(folder.getFId())
                 .memo(savedItem.getMemo())
                 .importance(savedItem.isImportance())
                 .deadline(savedItem.getDeadline())
@@ -136,8 +141,10 @@ public class ItemServiceImpl implements ItemService{
 
 
         ItemGetResponse response = ItemGetResponse.builder()
+                .itemId(item.getItemId())
                 .url(item.getUrl())
                 .folderName(item.getFolder() != null ? item.getFolder().getFolderName() : "미지정")// 위에서 추출한 Name 값 세팅
+                .folderId(item.getFolder() != null ? item.getFolder().getFId() : null)// 위에서 추출한 Name 값 세팅
                 .title(item.getTitle())
                 .memo(item.getMemo())
                 .importance(item.isImportance())
@@ -250,9 +257,15 @@ public class ItemServiceImpl implements ItemService{
     public void emptyTrash(Long userId) {
         // 해당 유저의 아이템 중 상태가 TRASH인 것만 찾아서 한꺼번에 삭제
         List<Item> trashItems = itemRepository.findByUser_UserIdAndStatus(userId, Item.ItemStatus.TRASH);
+        List<Folder> trashFolders = folderRepository.findByUser_UserIdAndStatus(userId, Item.ItemStatus.TRASH);
 
         if (!trashItems.isEmpty()) {
             itemRepository.deleteAllInBatch(trashItems);
+        }
+
+        // 휴지통에 있는 폴더들을 일괄 삭제
+        if (!trashFolders.isEmpty()) {
+            folderRepository.deleteAllInBatch(trashFolders);
         }
     }
 
@@ -273,7 +286,7 @@ public class ItemServiceImpl implements ItemService{
         }
         // 청소 대상 (최신순 + ACTIVE 조건)
         else if ("stale".equals(filter)) {
-            items = itemRepository.findByUser_UserIdAndUpdatedAtBeforeAndStatus(
+            items = itemRepository.findStaleItems(
                     userId, LocalDateTime.now().minusDays(50), Item.ItemStatus.ACTIVE);
         }
         // 휴지통 (TRASH 상태 조회 유지)
@@ -295,6 +308,7 @@ public class ItemServiceImpl implements ItemService{
                         .url(item.getUrl())
                         .title(item.getTitle())
                         .folderName(item.getFolder() != null ? item.getFolder().getFolderName() : null)
+                        .folderId(item.getFolder() != null ? item.getFolder().getFId() : null)
                         .memo(item.getMemo())
                         .importance(item.isImportance())
                         .deadline(item.getDeadline())
@@ -392,13 +406,15 @@ public class ItemServiceImpl implements ItemService{
     public List<ItemGetResponse> getByFolderId(Long fId) {
 
 
-        List<Item> items = itemRepository.findByFolder_fId(fId);
+        List<Item> items = itemRepository.findByFolder_fIdAndStatus(fId, Item.ItemStatus.ACTIVE);
 
         List<ItemGetResponse> response = items.stream()
                 .map(item -> ItemGetResponse.builder()
                         .itemId(item.getItemId())
                         .url(item.getUrl())
                         .title(item.getTitle())
+                        .folderName(item.getFolder() != null ? item.getFolder().getFolderName() : null)
+                        .folderId(item.getFolder() != null ? item.getFolder().getFId() : null)
                         .memo(item.getMemo())
                         .importance(item.isImportance())
                         .deadline(item.getDeadline())
@@ -454,6 +470,40 @@ public class ItemServiceImpl implements ItemService{
                 .build();
     }
 
+    @Transactional
+    @Override
+    public void moveItemsToFolder(ItemMoveRequest request, Long userId) {
+        // 1. 목적지 폴더 조회 및 권한 확인
+        // (폴더 ID가 없거나, 본인 폴더가 아니면 예외 발생)
+        Folder folder = folderRepository.findById(request.getFolderId())
+                .orElseThrow(() -> new IllegalArgumentException("폴더를 찾을 수 없습니다."));
+
+        if (!folder.getUser().getUserId().equals(userId)) {
+            throw new IllegalArgumentException("해당 폴더에 접근 권한이 없습니다.");
+        }
+
+        if (folder.getStatus() == Item.ItemStatus.TRASH) {
+            throw new IllegalArgumentException("휴지통에 있는 폴더로는 아이템을 이동할 수 없습니다.");
+        }
+
+        // 2. 이동할 아이템들 조회
+        List<Item> items = itemRepository.findAllById(request.getItemIds());
+
+        if (items.isEmpty()) {
+            throw new IllegalArgumentException("이동할 아이템이 선택되지 않았습니다.");
+        }
+
+        // 3. 아이템 순회하며 폴더 변경
+        for (Item item : items) {
+            // 보안 체크: 내 아이템이 맞는지 확인
+            if (!item.getUser().getUserId().equals(userId)) {
+                throw new IllegalArgumentException("본인의 아이템만 이동할 수 있습니다. ID: " + item.getItemId());
+            }
+
+            // 폴더 변경 (Dirty Checking으로 인해 트랜잭션 종료 시 자동 UPDATE 쿼리 발생)
+            item.updateFolder(folder);
+        }
+    }
 }
 
 

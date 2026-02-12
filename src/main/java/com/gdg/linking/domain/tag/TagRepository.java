@@ -3,11 +3,13 @@ package com.gdg.linking.domain.tag;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 
@@ -23,4 +25,10 @@ public interface TagRepository extends JpaRepository<Tag,Long> {
             "AND t.tagName LIKE %:keyword%")
     Slice<Tag> findTagsByUserIdAndKeyword(@Param("userId") Long userId, @Param("keyword") String keyword, Pageable pageable);
 
+    @Query("SELECT t.tagName, COUNT(it) as tagCount " +
+            "FROM Tag t JOIN t.postTags it " +
+            "WHERE it.item.user.userId = :userId " +
+            "GROUP BY t.tagId, t.tagName " +
+            "ORDER BY tagCount DESC")
+    List<Object[]> findTop5TagsByUserId(@Param("userId") Long userId, Pageable pageable);
 }

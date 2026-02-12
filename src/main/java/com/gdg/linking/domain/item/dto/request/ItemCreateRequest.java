@@ -20,7 +20,10 @@ public class ItemCreateRequest {
     @Schema(description = "아이템 제목", example = "구글 메인 페이지")
     private String title;
 
-    @Schema(description = "저장할 폴더 ID ", example = "운동")
+    @Schema(description = "저장할 폴더 ID ", example = "1")
+    private Long folderId  ;
+
+    @Schema(description = "저장할 폴더 name ", example = "운동")
     private String folderName;
 
     @Schema(description = "메모 내용", example = "나중에 읽어볼 유용한 링크")

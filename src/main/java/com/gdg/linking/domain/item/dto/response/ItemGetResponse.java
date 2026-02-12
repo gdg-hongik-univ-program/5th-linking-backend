@@ -25,6 +25,9 @@ public class ItemGetResponse {
     @Schema(description = "아이템 제목", example = "최강록의 조리법")
     private String title;
 
+    @Schema(description = "저장할 폴더 ID ", example = "1")
+    private Long folderId;
+
     @Schema(description = "소속된 폴더 이름 (미지정 시 null)", example = "운동")
     private String folderName;
 

@@ -1,6 +1,7 @@
 package com.gdg.linking.domain.calendar.dto.response;
 
 import com.gdg.linking.domain.item.Item;
+import com.gdg.linking.domain.tag.ItemTag;
 import lombok.*;
 
 import java.time.LocalDate;
@@ -26,7 +27,7 @@ public class CalendarDayResponse {
         private String memo;
 
         // 이미지에 있는 #패션 등의 태그 (현재 엔티티에 미구현이므로 폴더명 등으로 대체 가능)
-        private String tag;
+        private List<String> tag;
 
         // 프론트엔드에서 D-1 등을 계산하기 위한 원본 날짜
         private LocalDate deadline;
