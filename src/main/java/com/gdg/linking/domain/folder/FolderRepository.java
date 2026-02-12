@@ -2,6 +2,8 @@ package com.gdg.linking.domain.folder;
 
 import com.gdg.linking.domain.item.Item;
 import com.gdg.linking.domain.user.User;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -23,6 +25,10 @@ public interface FolderRepository extends JpaRepository<Folder, Long> {
     List<Object[]> countItemsByUserId(@Param("userId") Long userId);
 
 
+    Optional<Folder> findByFolderNameAndUser(String folderName, User user);
+
+    //폴더 이름 검색
+    Slice<Folder> findByUser_UserIdAndFolderNameContaining(Long userId, String keyword, PageRequest pageRequest);
     //fid와 userId로 탐색
     @Query("SELECT f FROM Folder f WHERE f.fId = :fId AND f.user = :user")
     Optional<Folder> findByFIdAndUser(@Param("fId") Long fId, @Param("user") User user);
