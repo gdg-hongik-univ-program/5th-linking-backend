@@ -22,6 +22,7 @@ public class Tag {
     @Column(unique = true, nullable = false)
     private String tagName;
 
+    @Builder.Default
     @OneToMany(mappedBy = "tag")
     private List<ItemTag> postTags = new ArrayList<>();
 

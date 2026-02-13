@@ -98,4 +98,83 @@ public interface ItemRepository extends JpaRepository<Item, Long>{
 
     // [추가] 특정 사용자의 아이템 중, 폴더가 없는(NULL) 것만 최신순 조회
     List<Item> findByUser_UserIdAndStatusAndFolderIsNullOrderByCreatedAtDesc(Long userId, Item.ItemStatus status);
+
+    // 1. [마감 임박] + [검색]
+    // 조건: 사용자 + 상태(ACTIVE) + 마감일 범위 + (제목 or 태그 검색)
+    @Query("SELECT DISTINCT i FROM Item i " +
+            "LEFT JOIN i.itemTags it " +
+            "LEFT JOIN it.tag t " +
+            "WHERE i.user.userId = :userId " +
+            "AND i.status = :status " +
+            "AND i.deadline BETWEEN :startDate AND :endDate " +
+            "AND (i.title LIKE %:keyword% OR t.tagName LIKE %:keyword%) " +
+            "ORDER BY i.deadline ASC")
+    List<Item> searchUpcomingItems(
+            @Param("userId") Long userId,
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate,
+            @Param("status") Item.ItemStatus status,
+            @Param("keyword") String keyword);
+
+
+    // 2. [중요] + [검색]
+    // 조건: 사용자 + 상태(ACTIVE) + 중요(true) + (제목 or 태그 검색)
+    @Query("SELECT DISTINCT i FROM Item i " +
+            "LEFT JOIN i.itemTags it " +
+            "LEFT JOIN it.tag t " +
+            "WHERE i.user.userId = :userId " +
+            "AND i.status = :status " +
+            "AND i.importance = true " +
+            "AND (i.title LIKE %:keyword% OR t.tagName LIKE %:keyword%) " +
+            "ORDER BY i.createdAt DESC")
+    List<Item> searchImportantItems(
+            @Param("userId") Long userId,
+            @Param("status") Item.ItemStatus status,
+            @Param("keyword") String keyword);
+
+
+    // 3. [청소/Stale] + [검색]
+    // 조건: 사용자 + 상태(ACTIVE) + 50일 이상 경과 + (제목 or 태그 검색)
+    @Query("SELECT DISTINCT i FROM Item i " +
+            "LEFT JOIN i.itemTags it " +
+            "LEFT JOIN it.tag t " +
+            "WHERE i.user.userId = :userId " +
+            "AND i.status = :status " +
+            "AND (COALESCE(i.updatedAt, i.createdAt) < :targetDate) " +
+            "AND (i.title LIKE %:keyword% OR t.tagName LIKE %:keyword%) " +
+            "ORDER BY i.createdAt ASC")
+    List<Item> searchStaleItems(
+            @Param("userId") Long userId,
+            @Param("targetDate") LocalDateTime targetDate,
+            @Param("status") Item.ItemStatus status,
+            @Param("keyword") String keyword);
+
+
+    // 4. [휴지통] + [검색]
+    // 조건: 사용자 + 상태(TRASH) + (제목 or 태그 검색)
+    @Query("SELECT DISTINCT i FROM Item i " +
+            "LEFT JOIN i.itemTags it " +
+            "LEFT JOIN it.tag t " +
+            "WHERE i.user.userId = :userId " +
+            "AND i.status = :status " +
+            "AND (i.title LIKE %:keyword% OR t.tagName LIKE %:keyword%) " +
+            "ORDER BY i.deletedAt DESC")
+    List<Item> searchTrashItems(
+            @Param("userId") Long userId,
+            @Param("status") Item.ItemStatus status,
+            @Param("keyword") String keyword);
+
+
+    // 5. [전체/기본] + [검색] (필터 없을 때 사용)
+    @Query("SELECT DISTINCT i FROM Item i " +
+            "LEFT JOIN i.itemTags it " +
+            "LEFT JOIN it.tag t " +
+            "WHERE i.user.userId = :userId " +
+            "AND i.status = :status " +
+            "AND (i.title LIKE %:keyword% OR t.tagName LIKE %:keyword%) " +
+            "ORDER BY i.createdAt DESC")
+    List<Item> searchAllItems(
+            @Param("userId") Long userId,
+            @Param("status") Item.ItemStatus status,
+            @Param("keyword") String keyword);
 }

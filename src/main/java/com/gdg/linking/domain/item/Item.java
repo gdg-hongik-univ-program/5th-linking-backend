@@ -25,7 +25,7 @@ import java.util.List;
 public class Item {
 
     public enum ItemStatus {
-        ACTIVE, COMPLETED, TRASH
+        ACTIVE, COMPLETED, TRASH, ORPHAN
     }
 
     @Id
@@ -59,12 +59,15 @@ public class Item {
     @Column(name = "memo")
     private String memo;
 
+    @Builder.Default
     @Column(name = "importance")
     private boolean importance = false;
 
     @Column(name = "deadline")
     private LocalDate deadline;
 
+
+    @Builder.Default
     @Enumerated(EnumType.STRING)
     @Column(name = "status")
     private ItemStatus status = ItemStatus.ACTIVE;
@@ -86,6 +89,7 @@ public class Item {
         this.deletedAt = null;
     }
 
+    @Builder.Default
     @ManyToMany
     @JoinTable(
             name = "item_relations",           // 생성될 중간 테이블 이름
