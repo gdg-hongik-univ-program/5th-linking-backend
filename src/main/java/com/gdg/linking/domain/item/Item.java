@@ -25,7 +25,7 @@ import java.util.List;
 public class Item {
 
     public enum ItemStatus {
-        ACTIVE, COMPLETED, TRASH
+        ACTIVE, COMPLETED, TRASH,ORPHAN
     }
 
     @Id

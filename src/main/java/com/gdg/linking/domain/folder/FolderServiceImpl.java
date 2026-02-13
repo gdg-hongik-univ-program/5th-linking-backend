@@ -131,7 +131,7 @@ public class FolderServiceImpl implements FolderService {
     private void softDeleteRecursive(Folder folder) {
         // 현재 폴더에 포함된 모든 아이템들을 휴지통으로 이동
         for (Item item : folder.getItems()) {
-            item.updateStatus(Item.ItemStatus.TRASH); // Item 엔티티의 기존 메서드 활용
+            item.updateStatus(Item.ItemStatus.ORPHAN); // Item 엔티티의 기존 메서드 활용
         }
 
         // 현재 폴더 자체를 휴지통으로
@@ -282,7 +282,7 @@ public class FolderServiceImpl implements FolderService {
 
             // 3. 폴더 상태를 TRASH로 변경 (Recursive)
             // Folder 엔티티의 updateStatus가 하위 아이템들의 상태도 변경하도록 설계되어 있다면 편리합니다.
-            folder.updateStatus(Item.ItemStatus.TRASH);
+            softDeleteRecursive(folder);
 
             // 4. 폴더 내 아이템들의 예약 알림 삭제 (필요 시)
             for (Item item : folder.getItems()) {
