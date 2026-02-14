@@ -17,8 +17,7 @@ public interface ItemService {
 
     ItemDeleteResponse deleteItem(Long itemId, Long userId);
 
-    List<ItemGetResponse> getMyItems(Long userId, String filter);
-
+    List<ItemGetResponse> getMyItems(Long userId, String filter, String keyword);
     // 휴지통 개별 아이템 영구 삭제
     void hardDeleteOne(Long itemId, Long userId);
 
