@@ -66,6 +66,8 @@ public class Item {
     @Column(name = "deadline")
     private LocalDate deadline;
 
+
+    @Builder.Default
     @Enumerated(EnumType.STRING)
     @Column(name = "status")
     @Builder.Default
@@ -88,6 +90,7 @@ public class Item {
         this.deletedAt = null;
     }
 
+    @Builder.Default
     @ManyToMany
     @Builder.Default
     @JoinTable(

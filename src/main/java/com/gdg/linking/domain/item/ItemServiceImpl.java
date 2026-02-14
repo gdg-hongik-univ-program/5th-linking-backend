@@ -266,38 +266,76 @@ public class ItemServiceImpl implements ItemService{
 
     // 내 아이템 조회
     @Override
-    @Transactional
-    public List<ItemGetResponse> getMyItems(Long userId, String filter) {
+    @Transactional(readOnly = true) // 조회 최적화
+    public List<ItemGetResponse> getMyItems(Long userId, String filter, String keyword) {
         List<Item> items;
 
-        // 마감 임박 (최신순 + ACTIVE 조건)
-        if ("upcoming".equals(filter)) {
-            items = itemRepository.findByUser_UserIdAndDeadlineBetweenAndStatusOrderByDeadlineAsc(
-                    userId, LocalDate.now(), LocalDate.now().plusDays(7), Item.ItemStatus.ACTIVE);
+        // 검색어가 유효한지 확인 (null이 아니고 빈 문자열도 아님)
+        boolean hasKeyword = keyword != null && !keyword.trim().isEmpty();
+
+        // 1. 검색어가 있을 때 (AND 조건 적용)
+        if (hasKeyword) {
+            String searchKeyword = keyword.trim(); // 공백 제거
+
+            if ("upcoming".equals(filter)) {
+                // 마감 임박 + 검색
+                items = itemRepository.searchUpcomingItems(
+                        userId,
+                        LocalDate.now(),
+                        LocalDate.now().plusDays(7),
+                        Item.ItemStatus.ACTIVE,
+                        searchKeyword
+                );
+            } else if ("important".equals(filter)) {
+                // 중요 + 검색
+                items = itemRepository.searchImportantItems(
+                        userId,
+                        Item.ItemStatus.ACTIVE,
+                        searchKeyword
+                );
+            } else if ("stale".equals(filter)) {
+                // 청소(50일 이상) + 검색
+                items = itemRepository.searchStaleItems(
+                        userId,
+                        LocalDateTime.now().minusDays(50),
+                        Item.ItemStatus.ACTIVE,
+                        searchKeyword
+                );
+            } else if ("trash".equals(filter)) {
+                // 휴지통 + 검색
+                items = itemRepository.searchTrashItems(
+                        userId,
+                        Item.ItemStatus.TRASH,
+                        searchKeyword
+                );
+            } else {
+                items = itemRepository.searchAllItems(
+                        userId,
+                        Item.ItemStatus.ACTIVE,
+                        searchKeyword
+                );
+            }
+
         }
-        // 중요 표시 (최신순 + ACTIVE 조건)
-        else if ("important".equals(filter)) {
-            items = itemRepository.findByUser_UserIdAndImportanceTrueAndStatus(userId, Item.ItemStatus.ACTIVE);
-        }
-        // 청소 대상 (최신순 + ACTIVE 조건)
-        else if ("stale".equals(filter)) {
-            items = itemRepository.findStaleItems(
-                    userId, LocalDateTime.now().minusDays(50), Item.ItemStatus.ACTIVE);
-        }
-        // 휴지통 (TRASH 상태 조회 유지)
-        else if ("trash".equals(filter)) {
-            items = itemRepository.findByUser_UserIdAndStatusOrderByDeletedAtDesc(userId, Item.ItemStatus.TRASH);
-        }
-        // 최근 저장 Item 8개 조회 (최신순 + ACTIVE 조건)
-        else if ("recent".equals(filter)) {
-            items = itemRepository.findTop8ByUser_UserIdAndStatusOrderByCreatedAtDesc(userId, Item.ItemStatus.ACTIVE);
-        }
-        else if ("root".equals(filter)) {
-            items = itemRepository.findByUser_UserIdAndStatusAndFolderIsNullOrderByCreatedAtDesc(userId, Item.ItemStatus.ACTIVE);
-        }
-        // 기본 조회 (최신순 + ACTIVE 조건)
+        // 2. 검색어가 없을 때 (기존 로직 유지)
         else {
-            items = itemRepository.findByUser_UserIdAndStatusOrderByCreatedAtDesc(userId, Item.ItemStatus.ACTIVE);
+            if ("upcoming".equals(filter)) {
+                items = itemRepository.findByUser_UserIdAndDeadlineBetweenAndStatusOrderByDeadlineAsc(
+                        userId, LocalDate.now(), LocalDate.now().plusDays(7), Item.ItemStatus.ACTIVE);
+            } else if ("important".equals(filter)) {
+                items = itemRepository.findByUser_UserIdAndImportanceTrueAndStatus(userId, Item.ItemStatus.ACTIVE);
+            } else if ("stale".equals(filter)) {
+                items = itemRepository.findStaleItems(
+                        userId, LocalDateTime.now().minusDays(50), Item.ItemStatus.ACTIVE);
+            } else if ("trash".equals(filter)) {
+                items = itemRepository.findByUser_UserIdAndStatusOrderByDeletedAtDesc(userId, Item.ItemStatus.TRASH);
+            } else if ("recent".equals(filter)) {
+                items = itemRepository.findTop8ByUser_UserIdAndStatusOrderByCreatedAtDesc(userId, Item.ItemStatus.ACTIVE);
+            } else if ("root".equals(filter)) {
+                items = itemRepository.findByUser_UserIdAndStatusAndFolderIsNullOrderByCreatedAtDesc(userId, Item.ItemStatus.ACTIVE);
+            } else {
+                items = itemRepository.findByUser_UserIdAndStatusOrderByCreatedAtDesc(userId, Item.ItemStatus.ACTIVE);
+            }
         }
 
         return items.stream()

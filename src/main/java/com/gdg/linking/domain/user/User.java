@@ -3,6 +3,7 @@ package com.gdg.linking.domain.user;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.springframework.core.codec.StringDecoder;
 
 @Entity
 @Table(name="users")
@@ -45,5 +46,15 @@ public class User {
     @Column(name = "profile_image")
     @Builder.Default
     private String profileImage = "PAWN";
+
+
+    public void updateNickName(String nickname){
+        this.nickName = nickName;
+    }
+
+
+    public void updatePassword(String password) {
+        this.password = password;
+    }
 
 }
