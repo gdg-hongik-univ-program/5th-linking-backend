@@ -36,11 +36,11 @@ public class User {
     // 프로필
     @Column(name = "total_xp")
     @Builder.Default
-    private int totalXp = 0;
+    private Integer totalXp = 0;
 
     @Column(name = "level")
     @Builder.Default
-    private int level = 1;
+    private Integer level = 1;
 
     @Column(name = "profile_image")
     @Builder.Default

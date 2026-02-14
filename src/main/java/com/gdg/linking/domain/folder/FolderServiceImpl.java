@@ -123,6 +123,8 @@ public class FolderServiceImpl implements FolderService {
         Folder folder = folderRepository.findById(folderId)
                 .orElseThrow(() -> new RuntimeException("삭제할 폴더가 존재하지 않습니다."));
 
+        folder.updateStatus(Item.ItemStatus.TRASH);
+
         // 재귀적으로 상태 변경 실행
         softDeleteRecursive(folder);
     }
@@ -134,11 +136,11 @@ public class FolderServiceImpl implements FolderService {
             item.updateStatus(Item.ItemStatus.ORPHAN); // Item 엔티티의 기존 메서드 활용
         }
 
-        // 현재 폴더 자체를 휴지통으로
-        folder.updateStatus(Item.ItemStatus.TRASH);
 
         // 모든 하위 폴더들에 대해서도 동일한 작업 수행 (재귀 호출)
         for (Folder child : folder.getChildFolders()) {
+            // 현재 폴더 자체를 휴지통으로
+            child.updateStatus(Item.ItemStatus.ORPHAN);
             softDeleteRecursive(child);
         }
     }
@@ -282,6 +284,7 @@ public class FolderServiceImpl implements FolderService {
 
             // 3. 폴더 상태를 TRASH로 변경 (Recursive)
             // Folder 엔티티의 updateStatus가 하위 아이템들의 상태도 변경하도록 설계되어 있다면 편리합니다.
+            folder.updateStatus(Item.ItemStatus.TRASH);
             softDeleteRecursive(folder);
 
             // 4. 폴더 내 아이템들의 예약 알림 삭제 (필요 시)
@@ -353,7 +356,7 @@ public class FolderServiceImpl implements FolderService {
 
         // 2. 내부 아이템들 복구
         for (Item item : folder.getItems()) {
-            if (item.getStatus() == Item.ItemStatus.TRASH) {
+            if (item.getStatus() == Item.ItemStatus.ORPHAN) {
                 item.restore();
                 // 마감 알림 등 부가 로직 필요 시 추가 (notificationService 등)
                 if (item.getDeadline() != null) {
@@ -364,7 +367,7 @@ public class FolderServiceImpl implements FolderService {
 
         // 3. 하위 폴더들 복구 (재귀 호출)
         for (Folder child : folder.getChildFolders()) {
-            if (child.getStatus() == Item.ItemStatus.TRASH) {
+            if (child.getStatus() == Item.ItemStatus.ORPHAN) {
                 restoreRecursive(child);
             }
         }

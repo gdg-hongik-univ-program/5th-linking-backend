@@ -23,6 +23,7 @@ public class Tag {
     private String tagName;
 
     @OneToMany(mappedBy = "tag")
+    @Builder.Default
     private List<ItemTag> postTags = new ArrayList<>();
 
 
