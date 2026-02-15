@@ -67,7 +67,7 @@ public class Item {
     private LocalDate deadline;
 
 
-    @Builder.Default
+
     @Enumerated(EnumType.STRING)
     @Column(name = "status")
     @Builder.Default
@@ -92,7 +92,6 @@ public class Item {
 
     @Builder.Default
     @ManyToMany
-    @Builder.Default
     @JoinTable(
             name = "item_relations",           // 생성될 중간 테이블 이름
             joinColumns = @JoinColumn(name = "from_id"),    // 현재 아이템(출발점) 외래키
