@@ -71,19 +71,6 @@ public class ItemContoller {
         return ResponseEntity.ok(response);
     }
 
-    @LoginCheck
-    @PostMapping("/{item_id}/restore")
-    @Operation(summary = "아이템 복구", description = "아이템을 ACTIVE 상태로 돌리고 50일 기준을 리셋합니다.")
-    public ResponseEntity<Void> restoreItem(
-            @PathVariable("item_id") Long itemId, HttpSession session) {
-
-        Long userId = getLoginUserId(session);
-
-        itemService.restoreItem(itemId, userId);
-
-        return ResponseEntity.ok().build();
-    }
-
 
 
     @LoginCheck
@@ -125,23 +112,6 @@ public class ItemContoller {
     }
 
 
-    @LoginCheck
-    @Operation(summary = "아이템 삭제", description = "아이템을 휴지통으로 이동(Soft Delete)합니다.")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "삭제 성공"),
-            @ApiResponse(responseCode = "404", description = "아이템을 찾을 수 없음"),
-            @ApiResponse(responseCode = "403", description = "삭제 권한 없음")
-    })
-    @DeleteMapping("/{itemId}")
-    public ResponseEntity<ItemDeleteResponse> deleteItem(
-            @PathVariable("itemId") Long itemId,
-            HttpSession session) {
-
-        Long userId = getLoginUserId(session);
-        ItemDeleteResponse response = itemService.deleteItem(itemId, userId);
-
-        return ResponseEntity.ok(response);
-    }
 
     @LoginCheck
     @Operation(summary = "아이템 대량 삭제", description = "아이템을 휴지통으로 이동(Soft Delete)합니다.")
@@ -159,16 +129,6 @@ public class ItemContoller {
         ItemDeleteResponse response = itemService.deleteItems(request, userId);
 
         return ResponseEntity.ok(response);
-    }
-
-    // 개별 아이템 영구 삭제
-    @LoginCheck
-    @DeleteMapping("/trash/{itemId}")
-    @Operation(summary = "휴지통 아이템 개별 영구 삭제")
-    public ResponseEntity<Void> deleteOneFromTrash(@PathVariable Long itemId, HttpSession session) {
-        Long userId = getLoginUserId(session);
-        itemService.hardDeleteOne(itemId, userId);
-        return ResponseEntity.ok().build();
     }
 
     // 휴지통 전체 비우기

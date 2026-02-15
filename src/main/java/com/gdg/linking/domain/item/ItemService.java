@@ -15,16 +15,10 @@ public interface ItemService {
 
     ItemUpdateResponse updateItem(ItemUpdateRequest request);
 
-    ItemDeleteResponse deleteItem(Long itemId, Long userId);
-
     List<ItemGetResponse> getMyItems(Long userId, String filter, String keyword);
-    // 휴지통 개별 아이템 영구 삭제
-    void hardDeleteOne(Long itemId, Long userId);
 
     // 휴지통 전체 비우기
     void emptyTrash(Long userId);
-
-    void restoreItem(Long itemId, Long userId);
 
 
     void addRelatedLink(Long fromId, Long toId);

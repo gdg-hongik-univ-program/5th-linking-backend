@@ -207,48 +207,6 @@ public class ItemServiceImpl implements ItemService{
 
     @Override
     @Transactional
-    public ItemDeleteResponse deleteItem(Long itemId, Long userId) {
-
-        // 조회
-        Item item = itemRepository.findById(itemId)
-                .orElseThrow(() -> new IllegalArgumentException("아이템을 찾을 수 없습니다."));
-
-        // 2. 권한 확인
-        if (!item.getUser().getUserId().equals(userId)) {
-            throw new IllegalArgumentException("삭제 권한이 없습니다.");
-        }
-
-
-        item.updateStatus(Item.ItemStatus.TRASH); // Item 삭제 시 상태를 ACTIVE에서 TRASH로 변경
-        notificationService.deleteReservedNotifications(itemId); // 알림 삭제
-
-
-        ItemDeleteResponse response = ItemDeleteResponse.builder()
-                        .itemId(item.getItemId())
-                        .message("아이템이 휴지통으로 이동되었습니다.")
-                        .build();
-        return response;
-    }
-
-    @Override
-    @Transactional
-    public void hardDeleteOne(Long itemId, Long userId) {
-        Item item = itemRepository.findById(itemId)
-                .orElseThrow(() -> new IllegalArgumentException("아이템을 찾을 수 없습니다."));
-
-        // 본인 확인 및 휴지통 상태 확인
-        if (!item.getUser().getUserId().equals(userId)) {
-            throw new IllegalArgumentException("삭제 권한이 없습니다.");
-        }
-        if (item.getStatus() != Item.ItemStatus.TRASH) {
-            throw new IllegalArgumentException("휴지통에 있는 아이템만 영구 삭제할 수 있습니다.");
-        }
-
-        itemRepository.delete(item); // DB에서 제거
-    }
-
-    @Override
-    @Transactional
     public void emptyTrash(Long userId) {
         // 해당 유저의 아이템 중 상태가 TRASH인 것만 찾아서 한꺼번에 삭제
         List<Item> trashItems = itemRepository.findByUser_UserIdAndStatus(userId, Item.ItemStatus.TRASH);
@@ -357,22 +315,6 @@ public class ItemServiceImpl implements ItemService{
                 .collect(Collectors.toList());
     }
 
-    @Override
-    @Transactional
-    public void restoreItem(Long itemId, Long userId) {
-        Item item = itemRepository.findById(itemId)
-                .orElseThrow(() -> new EntityNotFoundException("아이템을 찾을 수 없습니다."));
-
-        if (!item.getUser().getUserId().equals(userId)) {
-            throw new RuntimeException("권한이 없습니다."); // 보안 체크
-        }
-
-        item.restore(); // 상태 ACTIVE 변경 및 날짜 리셋
-
-        if (item.getDeadline() != null) {
-            notificationService.scheduleDeadlineNotifications(item);
-        }
-    }
 
     @Override
     @Transactional

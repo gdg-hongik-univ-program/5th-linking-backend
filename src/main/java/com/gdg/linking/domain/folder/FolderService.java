@@ -11,8 +11,6 @@ public interface FolderService {
 
     FolderResponse updateFolder(Long folderId, FolderUpdateRequest request);
 
-    void deleteFolder(Long folderId);
-
     void moveFolders(FolderMoveRequest request, Long userId);
 
     void restoreItem(Long itemId, Long userId);

@@ -101,13 +101,6 @@ public class FolderController {
         return ResponseEntity.ok(response);
     }
 
-    @DeleteMapping("/{folder_id}")
-    @Operation(summary = "폴더 휴지통으로 이동", description = "폴더를 삭제합니다.")
-    public ResponseEntity<Void> deleteFolder(@PathVariable("folder_id") Long folderId) {
-        folderService.deleteFolder(folderId);
-        return ResponseEntity.noContent().build();
-    }
-
     @PatchMapping("/move")
     @Operation(
             summary = "폴더 이동",

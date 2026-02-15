@@ -116,34 +116,6 @@ public class FolderServiceImpl implements FolderService {
                 .build();
     }
 
-    @Override
-    @Transactional
-    public void deleteFolder(Long folderId) {
-        // 삭제할 폴더 조회
-        Folder folder = folderRepository.findById(folderId)
-                .orElseThrow(() -> new RuntimeException("삭제할 폴더가 존재하지 않습니다."));
-
-        folder.updateStatus(Item.ItemStatus.TRASH);
-
-        // 재귀적으로 상태 변경 실행
-        softDeleteRecursive(folder);
-    }
-
-    // 하위 구조를 모두 훑으며 상태를 바꾸는 헬퍼 메서드
-    private void softDeleteRecursive(Folder folder) {
-        // 현재 폴더에 포함된 모든 아이템들을 휴지통으로 이동
-        for (Item item : folder.getItems()) {
-            item.updateStatus(Item.ItemStatus.ORPHAN); // Item 엔티티의 기존 메서드 활용
-        }
-
-
-        // 모든 하위 폴더들에 대해서도 동일한 작업 수행 (재귀 호출)
-        for (Folder child : folder.getChildFolders()) {
-            // 현재 폴더 자체를 휴지통으로
-            child.updateStatus(Item.ItemStatus.ORPHAN);
-            softDeleteRecursive(child);
-        }
-    }
 
     @Override
     @Transactional
@@ -291,6 +263,22 @@ public class FolderServiceImpl implements FolderService {
             for (Item item : folder.getItems()) {
                 notificationService.deleteReservedNotifications(item.getItemId());
             }
+        }
+    }
+
+    // 하위 구조를 모두 훑으며 상태를 바꾸는 헬퍼 메서드
+    private void softDeleteRecursive(Folder folder) {
+        // 현재 폴더에 포함된 모든 아이템들을 휴지통으로 이동
+        for (Item item : folder.getItems()) {
+            item.updateStatus(Item.ItemStatus.ORPHAN); // Item 엔티티의 기존 메서드 활용
+        }
+
+
+        // 모든 하위 폴더들에 대해서도 동일한 작업 수행 (재귀 호출)
+        for (Folder child : folder.getChildFolders()) {
+            // 현재 폴더 자체를 휴지통으로
+            child.updateStatus(Item.ItemStatus.ORPHAN);
+            softDeleteRecursive(child);
         }
     }
 
