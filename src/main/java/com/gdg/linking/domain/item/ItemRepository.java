@@ -6,6 +6,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -44,6 +45,11 @@ public interface ItemRepository extends JpaRepository<Item, Long>{
 
     // 휴지통 목록 조회
     List<Item> findByUser_UserIdAndStatusOrderByDeletedAtDesc(Long userId, Item.ItemStatus status);
+
+    // 휴지통에서 영구 삭제 시 Item 연결 끊기
+    @Modifying
+    @Query(value = "DELETE FROM item_relations WHERE from_id IN :itemIds OR to_id IN :itemIds", nativeQuery = true)
+    void deleteRelationsByItemIds(@Param("itemIds") List<Long> itemIds);
 
     // 상태가 TRASH이고 deletedAt이 30일 이전인 아이템 조회
     List<Item> findByStatusAndDeletedAtBefore(Item.ItemStatus status, LocalDate threshold);
@@ -177,4 +183,6 @@ public interface ItemRepository extends JpaRepository<Item, Long>{
             @Param("userId") Long userId,
             @Param("status") Item.ItemStatus status,
             @Param("keyword") String keyword);
+
+    List<Item> itemId(Long itemId);
 }

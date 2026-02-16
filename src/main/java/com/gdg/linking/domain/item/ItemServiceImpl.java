@@ -7,6 +7,7 @@ import com.gdg.linking.domain.item.dto.response.*;
 import com.gdg.linking.domain.notification.NotificationService;
 import com.gdg.linking.domain.profile.ProfileService;
 import com.gdg.linking.domain.tag.ItemTag;
+import com.gdg.linking.domain.tag.ItemTagRepository;
 import com.gdg.linking.domain.tag.Tag;
 import com.gdg.linking.domain.tag.TagRepository;
 import com.gdg.linking.domain.user.User;
@@ -42,6 +43,8 @@ public class ItemServiceImpl implements ItemService{
     private final ProfileService profileService;
 
     private final TagRepository tagRepository;
+
+    private final ItemTagRepository itemTagRepository;
 
 
     @Override
@@ -213,8 +216,22 @@ public class ItemServiceImpl implements ItemService{
         List<Folder> trashFolders = folderRepository.findByUser_UserIdAndStatus(userId, Item.ItemStatus.TRASH);
 
         if (!trashItems.isEmpty()) {
+            List<Long> itemIds = trashItems.stream()
+                    .map(Item::getItemId)
+                    .collect(Collectors.toList());
+
+
+            // ItemTag 데이터 수동으로 일괄 삭제
+            itemTagRepository.deleteByItemIn(trashItems);
+
+            itemRepository.deleteRelationsByItemIds(itemIds);
+
+            itemTagRepository.flush();
+
+            // 데이터 영구 삭제
             itemRepository.deleteAllInBatch(trashItems);
         }
+
 
         // 휴지통에 있는 폴더들을 일괄 삭제
         if (!trashFolders.isEmpty()) {
@@ -493,7 +510,7 @@ public class ItemServiceImpl implements ItemService{
 
             item.updateStatus(Item.ItemStatus.TRASH);
 
-            // 4. 예약된 알림 삭제
+            // 예약된 알림 삭제
             notificationService.deleteReservedNotifications(item.getItemId());
         }
 
@@ -543,6 +560,7 @@ public class ItemServiceImpl implements ItemService{
         }
     }
 
+
     @Override
     @Transactional
     public void hardDeleteItems(ItemDeleteRequest request, Long userId) {
@@ -565,7 +583,13 @@ public class ItemServiceImpl implements ItemService{
             }
         }
 
-        // 4. DB에서 영구 삭제 (일괄 처리로 성능 최적화)
+        // 4. 태그 삭제
+        itemTagRepository.deleteByItemIn(items);
+
+        // 5. 링크 연결 끊기
+        itemRepository.deleteRelationsByItemIds(request.getItemIds());
+
+        // 6. DB에서 영구 삭제 (일괄 처리로 성능 최적화)
         itemRepository.deleteAllInBatch(items);
     }
 
