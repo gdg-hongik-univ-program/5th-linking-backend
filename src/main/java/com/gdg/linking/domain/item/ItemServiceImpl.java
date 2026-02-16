@@ -239,71 +239,72 @@ public class ItemServiceImpl implements ItemService{
         }
     }
 
-    // 내 아이템 조회
     @Override
-    @Transactional(readOnly = true) // 조회 최적화
-    public List<ItemGetResponse> getMyItems(Long userId, String filter, String keyword) {
-        List<Item> items;
+    @Transactional(readOnly = true)
+    public List<?> getMyItems(Long userId, String filter, String keyword) {
+        String searchKeyword = (keyword != null && !keyword.trim().isEmpty()) ? keyword.trim() : "";
 
-        // 검색어가 유효한지 확인 (null이 아니고 빈 문자열도 아님)
-        boolean hasKeyword = keyword != null && !keyword.trim().isEmpty();
+        // 1. 휴지통 조건
+        if ("trash".equals(filter)) {
+            // 1. 직접 삭제된 폴더들 조회 (FolderRepository에 추가한 쿼리 호출)
+            List<Folder> trashFolders = folderRepository.findTrashFoldersOnly(userId, searchKeyword);
 
-        // 1. 검색어가 있을 때 (AND 조건 적용)
-        if (hasKeyword) {
-            String searchKeyword = keyword.trim(); // 공백 제거
+            // 2. 직접 삭제된 아이템들만 조회 (ItemRepository에 새로 정의할 쿼리 호출)
+            List<Item> trashItems = itemRepository.findTrashItemsOnly(userId, searchKeyword);
 
-            if ("upcoming".equals(filter)) {
-                // 마감 임박 + 검색
-                items = itemRepository.searchUpcomingItems(
-                        userId,
-                        LocalDate.now(),
-                        LocalDate.now().plusDays(7),
-                        Item.ItemStatus.ACTIVE,
-                        searchKeyword
-                );
-            } else if ("important".equals(filter)) {
-                // 중요 + 검색
-                items = itemRepository.searchImportantItems(
-                        userId,
-                        Item.ItemStatus.ACTIVE,
-                        searchKeyword
-                );
-            } else if ("stale".equals(filter)) {
-                // 청소(50일 이상) + 검색
-                items = itemRepository.searchStaleItems(
-                        userId,
-                        LocalDateTime.now().minusDays(50),
-                        Item.ItemStatus.ACTIVE,
-                        searchKeyword
-                );
-            } else if ("trash".equals(filter)) {
-                // 휴지통 + 검색
-                items = itemRepository.searchTrashItems(
-                        userId,
-                        Item.ItemStatus.TRASH,
-                        searchKeyword
-                );
-            } else {
-                items = itemRepository.searchAllItems(
-                        userId,
-                        Item.ItemStatus.ACTIVE,
-                        searchKeyword
-                );
+            List<TrashResponse> trashList = new ArrayList<>();
+
+            // 폴더 변환
+            for (Folder folder : trashFolders) {
+                trashList.add(TrashResponse.builder()
+                        .type("FOLDER")
+                        .id(folder.getFId())
+                        .title(folder.getFolderName())
+                        // Folder의 deletedAt은 LocalDate이므로 LocalDateTime으로 변환
+                        .deletedAt(folder.getDeletedAt() != null ? folder.getDeletedAt().atStartOfDay() : null)
+                        .build());
             }
 
+            // 아이템 변환
+            for (Item item : trashItems) {
+                trashList.add(TrashResponse.builder()
+                        .type("ITEM")
+                        .id(item.getItemId())
+                        .title(item.getTitle())
+                        // Item의 deletedAt은 이미 LocalDateTime이거나 LocalDate일 수 있음 (엔티티 기준 확인 필요)
+                        .deletedAt(item.getDeletedAt() != null ? item.getDeletedAt().atStartOfDay() : null)
+                        .folderName(item.getFolder() != null ? item.getFolder().getFolderName() : "미지정")
+                        .build());
+            }
+
+            // 삭제일 기준 최신순 정렬
+            trashList.sort((a, b) -> {
+                if (a.getDeletedAt() == null || b.getDeletedAt() == null) return 0;
+                return b.getDeletedAt().compareTo(a.getDeletedAt());
+            });
+
+            return trashList;
         }
-        // 2. 검색어가 없을 때 (기존 로직 유지)
-        else {
+
+        // 2. 일반 목록 모드 (기존 로직 유지)
+        List<Item> items;
+        if (!searchKeyword.isEmpty()) {
             if ("upcoming".equals(filter)) {
-                items = itemRepository.findByUser_UserIdAndDeadlineBetweenAndStatusOrderByDeadlineAsc(
-                        userId, LocalDate.now(), LocalDate.now().plusDays(7), Item.ItemStatus.ACTIVE);
+                items = itemRepository.searchUpcomingItems(userId, LocalDate.now(), LocalDate.now().plusDays(7), Item.ItemStatus.ACTIVE, searchKeyword);
+            } else if ("important".equals(filter)) {
+                items = itemRepository.searchImportantItems(userId, Item.ItemStatus.ACTIVE, searchKeyword);
+            } else if ("stale".equals(filter)) {
+                items = itemRepository.searchStaleItems(userId, LocalDateTime.now().minusDays(50), Item.ItemStatus.ACTIVE, searchKeyword);
+            } else {
+                items = itemRepository.searchAllItems(userId, Item.ItemStatus.ACTIVE, searchKeyword);
+            }
+        } else {
+            if ("upcoming".equals(filter)) {
+                items = itemRepository.findByUser_UserIdAndDeadlineBetweenAndStatusOrderByDeadlineAsc(userId, LocalDate.now(), LocalDate.now().plusDays(7), Item.ItemStatus.ACTIVE);
             } else if ("important".equals(filter)) {
                 items = itemRepository.findByUser_UserIdAndImportanceTrueAndStatus(userId, Item.ItemStatus.ACTIVE);
             } else if ("stale".equals(filter)) {
-                items = itemRepository.findStaleItems(
-                        userId, LocalDateTime.now().minusDays(50), Item.ItemStatus.ACTIVE);
-            } else if ("trash".equals(filter)) {
-                items = itemRepository.findByUser_UserIdAndStatusOrderByDeletedAtDesc(userId, Item.ItemStatus.TRASH);
+                items = itemRepository.findStaleItems(userId, LocalDateTime.now().minusDays(50), Item.ItemStatus.ACTIVE);
             } else if ("recent".equals(filter)) {
                 items = itemRepository.findTop8ByUser_UserIdAndStatusOrderByCreatedAtDesc(userId, Item.ItemStatus.ACTIVE);
             } else if ("root".equals(filter)) {
@@ -313,6 +314,7 @@ public class ItemServiceImpl implements ItemService{
             }
         }
 
+        // ItemGetResponse로 매핑하여 반환
         return items.stream()
                 .map(item -> ItemGetResponse.builder()
                         .itemId(item.getItemId())

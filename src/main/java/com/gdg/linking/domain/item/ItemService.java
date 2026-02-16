@@ -15,7 +15,7 @@ public interface ItemService {
 
     ItemUpdateResponse updateItem(ItemUpdateRequest request);
 
-    List<ItemGetResponse> getMyItems(Long userId, String filter, String keyword);
+    List<?> getMyItems(Long userId, String filter, String keyword);
 
     // 휴지통 전체 비우기
     void emptyTrash(Long userId);

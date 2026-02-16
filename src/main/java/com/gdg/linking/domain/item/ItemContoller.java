@@ -58,17 +58,14 @@ public class ItemContoller {
     @GetMapping("")
     @Operation(summary = "내 아이템 목록 조회 및 검색",
             description = "필터(upcoming, important, stale, trash)와 검색어(keyword)를 조합하여 조회합니다.")
-    public ResponseEntity<List<ItemGetResponse>> getMyItems(
+    public ResponseEntity<?> getMyItems(
             @RequestParam(value = "filter", required = false) String filter,
             @RequestParam(value = "keyword", required = false) String keyword, // 추가됨
             HttpSession session) {
 
         Long userId = getLoginUserId(session);
 
-        // keyword 파라미터 추가 전달
-        List<ItemGetResponse> response = itemService.getMyItems(userId, filter, keyword);
-
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(itemService.getMyItems(userId, filter, keyword));
     }
 
 
