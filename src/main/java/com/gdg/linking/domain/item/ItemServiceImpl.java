@@ -165,6 +165,14 @@ public class ItemServiceImpl implements ItemService{
         Item item = itemRepository.findById(request.getItemId())
                 .orElseThrow(() -> new IllegalArgumentException("해당 아이템이 존재하지 않습니다. id=" + request.getItemId()));
 
+        // 폴더 변경 로직
+        if (request.getFolderId() != null) {
+            Folder newFolder = folderRepository.findById(request.getFolderId())
+                    .orElseThrow(() -> new IllegalArgumentException("해당 폴더가 존재하지 않습니다."));
+
+            item.updateFolder(newFolder);
+        }
+
         LocalDate oldDeadline = item.getDeadline();
 
         // 데이터 업데이트
@@ -177,6 +185,7 @@ public class ItemServiceImpl implements ItemService{
         );
 
 
+        // 마감일 변경시 알림 재설정
         if (oldDeadline != null && !oldDeadline.equals(request.getDeadline())) {
             notificationService.deleteReservedNotifications(item.getItemId());
             notificationService.scheduleDeadlineNotifications(item);
@@ -198,6 +207,7 @@ public class ItemServiceImpl implements ItemService{
                 .memo(item.getMemo())
                 .importance(item.isImportance())
                 .deadline(item.getDeadline())
+                .folderId(item.getFolder() != null ? item.getFolder().getFId() : null)
                 .tags(item.getItemTags().stream()
                         .map(it -> it.getTag().getTagName())
                         .collect(Collectors.toList()))

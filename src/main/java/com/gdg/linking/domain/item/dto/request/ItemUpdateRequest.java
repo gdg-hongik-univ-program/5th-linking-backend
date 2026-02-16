@@ -33,5 +33,6 @@ public class ItemUpdateRequest {
     @Schema(description = "수정된 기한", example = "2026-01-20")
     private LocalDate deadline;
 
-
+    @Schema(description = "이동할 폴더 ID", example = "3")
+    private Long folderId;
 }

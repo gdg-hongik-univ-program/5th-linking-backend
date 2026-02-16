@@ -38,4 +38,8 @@ public class ItemUpdateResponse {
 
     @Schema(description = "수정된 날짜", example = "2026-02-05T13:19:00")
     private LocalDateTime updatedAt;
+
+    @Schema(description = "변경된 폴더 ID", example = "3")
+    private Long folderId;
+
 }
