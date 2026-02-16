@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -20,6 +21,8 @@ public class NotificationServiceImpl implements NotificationService {
     private final NotificationRepository notificationRepository;
     // private final ItemRepository itemRepository;
     private final UserRepository userRepository;
+
+    private final ItemRepository itemRepository;
 
     @Override
     @Transactional
@@ -110,20 +113,32 @@ public class NotificationServiceImpl implements NotificationService {
     @Override
     @Transactional
     public void createMonthlyCleanupNotifications() {
-
+        // 모든 사용자 조회
         List<User> users = userRepository.findAll();
 
-        for (User user : users) {
-            // 정리 권유 알림 객체 생성
-            Notification notification = Notification.builder()
-                    .user(user)
-                    .type("CLEANUP") // 알림 유형 구분
-                    .message("벌써 한 달의 절반이 지났어요! 저장해둔 링크들을 정리하며 생각을 비워볼까요? 🧹")
-                    .isRead(false)
-                    .scheduledDate(LocalDate.now())
-                    .build();
+        // 50일 전 시점 계산
+        LocalDateTime threshold = LocalDateTime.now().minusDays(50);
 
-            notificationRepository.save(notification);
+        for (User user : users) {
+            // 방치된 아이템 개수 쿼리 실행
+            long staleCount = itemRepository.countByUser_UserIdAndStatusAndCreatedAtBefore(
+                    user.getUserId(),
+                    Item.ItemStatus.ACTIVE,
+                    threshold
+            );
+
+            // 방치된 아이템이 1개라도 있을 때만 알림 생성
+            if (staleCount > 0) {
+                Notification notification = Notification.builder()
+                        .user(user)
+                        .type("CLEANUP")
+                        .message(String.format("벌써 한 달의 절반이 지났어요! 방치된 %d개의 링크를 정리하며 생각을 비워볼까요? 🧹", staleCount))
+                        .isRead(false)
+                        .scheduledDate(LocalDate.now())
+                        .build();
+
+                notificationRepository.save(notification);
+            }
         }
     }
 }

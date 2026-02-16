@@ -43,6 +43,12 @@ public interface ItemRepository extends JpaRepository<Item, Long>{
             @Param("targetDate") LocalDateTime targetDate,
             @Param("status") Item.ItemStatus status);
 
+    long countByUser_UserIdAndStatusAndCreatedAtBefore(
+            Long userId,
+            Item.ItemStatus status,
+            LocalDateTime threshold
+    );
+
     // 휴지통 목록 조회
     List<Item> findByUser_UserIdAndStatusOrderByDeletedAtDesc(Long userId, Item.ItemStatus status);
 
