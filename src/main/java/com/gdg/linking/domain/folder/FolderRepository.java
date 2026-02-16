@@ -32,4 +32,11 @@ public interface FolderRepository extends JpaRepository<Folder, Long> {
     //fid와 userId로 탐색
     @Query("SELECT f FROM Folder f WHERE f.fId = :fId AND f.user = :user")
     Optional<Folder> findByFIdAndUser(@Param("fId") Long fId, @Param("user") User user);
+
+    @Query("SELECT f FROM Folder f " +
+            "WHERE f.user.userId = :userId " +
+            "AND f.status = 'TRASH' " +
+            "AND (:keyword IS NULL OR f.folderName LIKE %:keyword%) " +
+            "ORDER BY f.deletedAt DESC")
+    List<Folder> findTrashFoldersOnly(@Param("userId") Long userId, @Param("keyword") String keyword);
 }

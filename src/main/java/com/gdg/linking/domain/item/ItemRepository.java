@@ -170,6 +170,12 @@ public interface ItemRepository extends JpaRepository<Item, Long>{
             @Param("status") Item.ItemStatus status,
             @Param("keyword") String keyword);
 
+    @Query("SELECT DISTINCT i FROM Item i " +
+            "WHERE i.user.userId = :userId " +
+            "AND i.status = 'TRASH' " +
+            "AND (i.folder IS NULL OR i.folder.status = 'ACTIVE') " +
+            "AND (i.title LIKE %:keyword% OR i.memo LIKE %:keyword%)")
+    List<Item> findTrashItemsOnly(@Param("userId") Long userId, @Param("keyword") String keyword);
 
     // 5. [전체/기본] + [검색] (필터 없을 때 사용)
     @Query("SELECT DISTINCT i FROM Item i " +
