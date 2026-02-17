@@ -38,6 +38,7 @@ public class UserServiceImpl implements UserService{
                 .email(request.getEmail())
                 .nickName(request.getNickName())
                 .isAdmin(false)
+                .profileImage(request.getProfileImage())
                 .build();
 
         userRepository.save(user);

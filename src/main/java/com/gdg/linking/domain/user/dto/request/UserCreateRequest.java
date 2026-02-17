@@ -22,4 +22,7 @@ public class UserCreateRequest {
     @Schema(description = "닉네임", example = "김생산")
     private String nickName;
 
+    @Schema(description = "사용자 프로필 사진", example = "PAWN")
+    private String profileImage;
+
 }
