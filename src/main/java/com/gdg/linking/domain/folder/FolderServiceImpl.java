@@ -169,13 +169,17 @@ public class FolderServiceImpl implements FolderService {
         // DB 접근 없이 메모리 조회
         int itemCount = itemCountMap.getOrDefault(folder.getFId(), 0);
 
+        long activeChildCount = folder.getChildFolders().stream()
+                .filter(child -> child.getStatus() == Item.ItemStatus.ACTIVE)
+                .count();
+
         return FolderResponse.builder()
                 .folderId(folder.getFId())
                 .folderName(folder.getFolderName())
                 .parentId(folder.getParentFolder() != null ? folder.getParentFolder().getFId() : null)
                 .createdAt(createdAt)
                 .displayTime(displayTime)
-                .childCount(folder.getChildFolders().size())
+                .childCount((int)activeChildCount)
                 //item 갯수 조회
                 .itemCount(itemCount)
                 .children(new ArrayList<>())
