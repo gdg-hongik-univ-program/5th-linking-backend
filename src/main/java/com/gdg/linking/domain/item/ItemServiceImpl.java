@@ -482,8 +482,12 @@ public class ItemServiceImpl implements ItemService{
     public void moveItemsToFolder(ItemMoveRequest request, Long userId) {
         // 1. 목적지 폴더 조회 및 권한 확인
         // (폴더 ID가 없거나, 본인 폴더가 아니면 예외 발생)
-        Folder folder = folderRepository.findById(request.getFolderId())
-                .orElseThrow(() -> new IllegalArgumentException("폴더를 찾을 수 없습니다."));
+        Folder folder = null;
+        if(request.getFolderId() != null){
+            folder = folderRepository.findById(request.getFolderId())
+                    .orElseThrow(() -> new IllegalArgumentException("폴더를 찾을 수 없습니다."));
+        }
+
 
         if (!folder.getUser().getUserId().equals(userId)) {
             throw new IllegalArgumentException("해당 폴더에 접근 권한이 없습니다.");
