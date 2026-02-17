@@ -309,7 +309,7 @@ public class FolderServiceImpl implements FolderService {
         }
 
         // 4. DB에서 영구 삭제 (하위 폴더 및 아이템도 Cascade 설정에 의해 함께 삭제됨)
-        folderRepository.deleteAllInBatch(folders);
+        folderRepository.deleteAll(folders);
     }
 
     // FolderServiceImpl.java
