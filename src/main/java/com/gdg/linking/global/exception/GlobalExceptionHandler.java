@@ -8,6 +8,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.client.HttpStatusCodeException;
 
 @Hidden
 @ControllerAdvice
@@ -23,6 +24,15 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleNotFoundException(NotFoundException e){
         ErrorResponse errorResponse = new ErrorResponse(e.getMessage());
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
+    }
+
+    // 추가: HttpStatusCodeException 전용 핸들러
+    @ExceptionHandler(value = HttpStatusCodeException.class)
+    public ResponseEntity<ErrorResponse> handleHttpStatusCodeException(HttpStatusCodeException e) {
+        ErrorResponse errorResponse = new ErrorResponse(e.getMessage());
+
+        // 예외에 담긴 상태 코드(401 등)를 그대로 꺼내서 설정
+        return ResponseEntity.status(e.getStatusCode()).body(errorResponse);
     }
 
     //모든 에러의 부모
