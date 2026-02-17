@@ -171,6 +171,9 @@ public class ItemServiceImpl implements ItemService{
                     .orElseThrow(() -> new IllegalArgumentException("해당 폴더가 존재하지 않습니다."));
 
             item.updateFolder(newFolder);
+        } else {
+            // null을 보냈다면 최상위(Root)로 이동하는 것으로 간주
+            item.updateFolder(null);
         }
 
         LocalDate oldDeadline = item.getDeadline();
