@@ -1,5 +1,6 @@
 package com.gdg.linking.domain.profile;
 
+import com.gdg.linking.domain.profile.dto.ProfileGraphResponse;
 import com.gdg.linking.domain.profile.dto.ProfileResponse;
 import com.gdg.linking.domain.tag.TagService;
 import com.gdg.linking.domain.tag.dto.TagStatResponse;
@@ -44,5 +45,16 @@ public class ProfileController {
     public ResponseEntity<List<TagStatResponse>> getMyProfileStats(HttpSession session) {
         Long userId = getLoginUserId(session);
         return ResponseEntity.ok(tagService.getTop5TagStats(userId));
+    }
+
+    // 옵시디언 뷰
+    @LoginCheck
+    @Operation(summary = "프로필 옵시디언 뷰 데이터 조회",
+            description = "내 프로필 페이지에서 보여줄 지식 그래프(아이템 관계) 데이터를 조회합니다. (importance가 1이면 중요, 0이면 일반 Item)")
+    @GetMapping("/graph")
+    public ResponseEntity<ProfileGraphResponse> getMyGraph(HttpSession session) {
+        Long userId = getLoginUserId(session); // 세션에서 유저 ID 추출
+        ProfileGraphResponse response = profileService.getProfileGraph(userId);
+        return ResponseEntity.ok(response);
     }
 }

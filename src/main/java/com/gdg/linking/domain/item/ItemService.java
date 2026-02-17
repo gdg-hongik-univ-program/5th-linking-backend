@@ -2,9 +2,9 @@ package com.gdg.linking.domain.item;
 
 import com.gdg.linking.domain.item.dto.request.*;
 import com.gdg.linking.domain.item.dto.response.*;
+import com.gdg.linking.domain.profile.dto.ProfileGraphResponse;
 
 import java.util.List;
-import java.util.Map;
 
 public interface ItemService {
 
@@ -41,4 +41,6 @@ public interface ItemService {
     void restoreItems(ItemRestoreRequest request, Long userId);
 
     void hardDeleteItems(ItemDeleteRequest request, Long userId);
+
+    // 옵시디언 뷰를 위한 로직
 }
