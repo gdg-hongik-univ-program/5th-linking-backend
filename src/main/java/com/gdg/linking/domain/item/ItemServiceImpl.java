@@ -6,6 +6,7 @@ import com.gdg.linking.domain.item.dto.request.*;
 import com.gdg.linking.domain.item.dto.response.*;
 import com.gdg.linking.domain.notification.NotificationService;
 import com.gdg.linking.domain.profile.ProfileService;
+import com.gdg.linking.domain.profile.dto.ProfileGraphResponse;
 import com.gdg.linking.domain.tag.ItemTag;
 import com.gdg.linking.domain.tag.ItemTagRepository;
 import com.gdg.linking.domain.tag.Tag;
@@ -14,17 +15,13 @@ import com.gdg.linking.domain.user.User;
 import com.gdg.linking.domain.user.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.transaction.annotation.Transactional;
-import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.nio.file.AccessDeniedException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 
@@ -607,6 +604,7 @@ public class ItemServiceImpl implements ItemService{
         // 6. DB에서 영구 삭제 (일괄 처리로 성능 최적화)
         itemRepository.deleteAllInBatch(items);
     }
+
 
 }
 
