@@ -5,6 +5,8 @@ import com.gdg.linking.domain.tag.ItemTag;
 import com.gdg.linking.domain.user.User;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
@@ -48,6 +50,7 @@ public class Item {
     //orphanRemoval 고아 객체 삭제
     @Builder.Default
     @OneToMany(mappedBy = "item",   cascade = CascadeType.ALL, orphanRemoval = true)
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private List<ItemTag> itemTags = new ArrayList<>();
 
     @Column(name = "url")
