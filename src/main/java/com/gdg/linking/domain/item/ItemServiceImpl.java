@@ -480,21 +480,22 @@ public class ItemServiceImpl implements ItemService{
     @Transactional
     @Override
     public void moveItemsToFolder(ItemMoveRequest request, Long userId) {
-        // 1. 목적지 폴더 조회 및 권한 확인
-        // (폴더 ID가 없거나, 본인 폴더가 아니면 예외 발생)
+        // 1. 목적지 폴더 조회
         Folder folder = null;
-        if(request.getFolderId() != null){
+
+        // 폴더 ID가 있을 때만 조회 및 검증 수행
+        if (request.getFolderId() != null) {
             folder = folderRepository.findById(request.getFolderId())
                     .orElseThrow(() -> new IllegalArgumentException("폴더를 찾을 수 없습니다."));
-        }
 
+            // [수정] 폴더가 null이 아닐 때만 권한과 상태를 확인해야 함!
+            if (!folder.getUser().getUserId().equals(userId)) {
+                throw new IllegalArgumentException("해당 폴더에 접근 권한이 없습니다.");
+            }
 
-        if (!folder.getUser().getUserId().equals(userId)) {
-            throw new IllegalArgumentException("해당 폴더에 접근 권한이 없습니다.");
-        }
-
-        if (folder.getStatus() == Item.ItemStatus.TRASH) {
-            throw new IllegalArgumentException("휴지통에 있는 폴더로는 아이템을 이동할 수 없습니다.");
+            if (folder.getStatus() == Item.ItemStatus.TRASH) {
+                throw new IllegalArgumentException("휴지통에 있는 폴더로는 아이템을 이동할 수 없습니다.");
+            }
         }
 
         // 2. 이동할 아이템들 조회
@@ -511,11 +512,10 @@ public class ItemServiceImpl implements ItemService{
                 throw new IllegalArgumentException("본인의 아이템만 이동할 수 있습니다. ID: " + item.getItemId());
             }
 
-            // 폴더 변경 (Dirty Checking으로 인해 트랜잭션 종료 시 자동 UPDATE 쿼리 발생)
+            // 폴더 변경 (folder가 null이면 최상위로 이동, 값이 있으면 해당 폴더로 이동)
             item.updateFolder(folder);
         }
     }
-
     @Override
     @Transactional
     public ItemDeleteResponse deleteItems(ItemDeleteRequest request, Long userId) {
