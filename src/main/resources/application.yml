@@ -33,3 +33,4 @@ Jackson:
   time-zone: Asia/Seoul
   serialization:
     write-dates-as-timestamps: false # ISO-8601 형식으로 깔끔하게 출력
+
