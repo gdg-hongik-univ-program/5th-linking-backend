@@ -9,13 +9,15 @@ import lombok.Getter;
 public class UserInfoResponse {
     private String loginId;
     private String nickName;
+    private String profileImage;
 
 
     // User 엔티티를 DTO로 변환하는 생성자
     public static UserInfoResponse from(User user) {
         return new UserInfoResponse(
                 user.getLoginId(),
-                user.getNickName()
+                user.getNickName(),
+                user.getProfileImage()
         );
     }
 }

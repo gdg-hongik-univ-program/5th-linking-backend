@@ -169,13 +169,17 @@ public class FolderServiceImpl implements FolderService {
         // DB 접근 없이 메모리 조회
         int itemCount = itemCountMap.getOrDefault(folder.getFId(), 0);
 
+        long activeChildCount = folder.getChildFolders().stream()
+                .filter(child -> child.getStatus() == Item.ItemStatus.ACTIVE)
+                .count();
+
         return FolderResponse.builder()
                 .folderId(folder.getFId())
                 .folderName(folder.getFolderName())
                 .parentId(folder.getParentFolder() != null ? folder.getParentFolder().getFId() : null)
                 .createdAt(createdAt)
                 .displayTime(displayTime)
-                .childCount(folder.getChildFolders().size())
+                .childCount((int)activeChildCount)
                 //item 갯수 조회
                 .itemCount(itemCount)
                 .children(new ArrayList<>())
@@ -305,7 +309,7 @@ public class FolderServiceImpl implements FolderService {
         }
 
         // 4. DB에서 영구 삭제 (하위 폴더 및 아이템도 Cascade 설정에 의해 함께 삭제됨)
-        folderRepository.deleteAllInBatch(folders);
+        folderRepository.deleteAll(folders);
     }
 
     // FolderServiceImpl.java

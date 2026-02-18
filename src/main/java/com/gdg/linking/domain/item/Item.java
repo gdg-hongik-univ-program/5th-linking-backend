@@ -5,6 +5,8 @@ import com.gdg.linking.domain.tag.ItemTag;
 import com.gdg.linking.domain.user.User;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
@@ -48,6 +50,7 @@ public class Item {
     //orphanRemoval 고아 객체 삭제
     @Builder.Default
     @OneToMany(mappedBy = "item",   cascade = CascadeType.ALL, orphanRemoval = true)
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private List<ItemTag> itemTags = new ArrayList<>();
 
     @Column(name = "url")
@@ -97,6 +100,7 @@ public class Item {
             joinColumns = @JoinColumn(name = "from_id"),    // 현재 아이템(출발점) 외래키
             inverseJoinColumns = @JoinColumn(name = "to_id") // 연결될 아이템(도착점) 외래키
     )
+    @OnDelete(action = OnDeleteAction.CASCADE) // item이 사라지면 item_tag 테이블 값도 제거하기
     private List<Item> relatedItems = new ArrayList<>();
 
     // 연결 편의 메서드

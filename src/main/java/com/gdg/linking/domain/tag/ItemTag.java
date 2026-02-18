@@ -4,6 +4,8 @@ package com.gdg.linking.domain.tag;
 import com.gdg.linking.domain.item.Item;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 @Entity
 @Setter
@@ -20,6 +22,7 @@ public class ItemTag {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "item_id")
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private Item item;
 
     @ManyToOne(fetch = FetchType.LAZY)

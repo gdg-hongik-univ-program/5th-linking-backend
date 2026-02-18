@@ -167,5 +167,20 @@ public class UserController {
         return ResponseEntity.ok().build();
     }
 
+    @PostMapping("sign-out")
+    @Operation(
+            summary = "로그아웃",
+            description = "사용자 로그아웃을 진행합니다. 세션을 만료시킵니다."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "로그아웃 성공")
+    })
+    public ResponseEntity<Void> signOut(HttpSession session) {
+        // 세션 무효화 (저장된 속성 다 날라감)
+        session.invalidate();
+
+        return ResponseEntity.ok().build();
+    }
+
 
 }
