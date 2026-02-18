@@ -296,19 +296,34 @@ public class FolderServiceImpl implements FolderService {
             throw new IllegalArgumentException("삭제할 폴더가 선택되지 않았습니다.");
         }
 
+        // --- [추가된 로직 시작] ---
+        // 폴더 안에 있는 모든 아이템의 ID를 수집합니다.
+        List<Long> allItemIdsInFolders = folders.stream()
+                .flatMap(folder -> folder.getItems().stream()) // 폴더 내 아이템 리스트 접근
+                .map(Item::getItemId)
+                .collect(Collectors.toList());
+
+        if (!allItemIdsInFolders.isEmpty()) {
+            // 아이템 삭제 전, 관계(Relation) 테이블 데이터를 먼저 청소합니다. (핵심!)
+            itemRepository.deleteRelationsByItemIds(allItemIdsInFolders);
+
+            // (선택 사항) 태그도 지워야 한다면 여기서 같이 지워줍니다.
+            // itemTagRepository.deleteByItemIn( ... );
+        }
+        // --- [추가된 로직 끝] ---
+
         for (Folder folder : folders) {
-            // 2. 권한 확인 (본인 폴더인지)
+            // 2. 권한 확인
             if (!folder.getUser().getUserId().equals(userId)) {
                 throw new IllegalArgumentException("삭제 권한이 없는 폴더가 포함되어 있습니다. ID: " + folder.getFId());
             }
-
-            // 3. 상태 확인 (휴지통에 있는 폴더만 영구 삭제 가능)
+            // 3. 상태 확인
             if (folder.getStatus() != Item.ItemStatus.TRASH) {
                 throw new IllegalArgumentException("휴지통에 있는 폴더만 영구 삭제할 수 있습니다. ID: " + folder.getFId());
             }
         }
 
-        // 4. DB에서 영구 삭제 (하위 폴더 및 아이템도 Cascade 설정에 의해 함께 삭제됨)
+        // 4. 이제 안전하게 폴더 삭제 (Cascade로 아이템도 같이 삭제됨)
         folderRepository.deleteAll(folders);
     }
 
