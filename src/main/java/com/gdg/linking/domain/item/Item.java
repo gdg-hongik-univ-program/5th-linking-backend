@@ -87,6 +87,10 @@ public class Item {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    // 썸네일 이미지 주소 저장 필드
+    @Column(name = "image_url")
+    private String imageUrl;
+
     public void restore() {
         this.status = ItemStatus.ACTIVE;
         this.updatedAt = LocalDateTime.now(); // 복구 시 시각을 현재로 갱신 (50일 기준 리셋)

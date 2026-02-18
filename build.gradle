@@ -34,6 +34,8 @@ dependencies {
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 	//swagger api 추가
 	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.5.0'
+	//og 태그를 사용하기 위한 jsoup 의존성 추가
+	implementation 'org.jsoup:jsoup:1.15.3'
 }
 
 tasks.named('test') {

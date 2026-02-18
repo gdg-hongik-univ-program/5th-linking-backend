@@ -24,6 +24,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
 
 @Service
 @RequiredArgsConstructor
@@ -63,6 +66,8 @@ public class ItemServiceImpl implements ItemService{
             throw new IllegalArgumentException("휴지통에 있는 폴더에는 아이템을 추가할 수 없습니다.");
         }
 
+        // [추가됨] 2. URL이 있다면 OG 태그(썸네일) 추출 시도
+        String extractedImageUrl = extractOgImage(request.getUrl());
 
         Item item = Item.builder()
                 .user(user)
@@ -73,6 +78,7 @@ public class ItemServiceImpl implements ItemService{
                 .memo(request.getMemo())
                 .importance(request.isImportance())
                 .deadline(request.getDeadline())
+                .imageUrl(extractedImageUrl) // [추가됨] 추출한 이미지 URL 저장
                 .build();
 
         // 2. 태그 처리 로직 (핵심)
@@ -110,6 +116,7 @@ public class ItemServiceImpl implements ItemService{
                 .tags(savedItem.getItemTags().stream()
                         .map(it -> it.getTag().getTagName())
                         .collect(Collectors.toList()))
+                .imageUrl(extractedImageUrl)
                 .build();
 
         // Item 생성 시 XP 증가
@@ -124,6 +131,38 @@ public class ItemServiceImpl implements ItemService{
         return response;
     }
 
+    // [추가됨] 썸네일 추출 전용 헬퍼 메서드
+    private String extractOgImage(String url) {
+        if (url == null || url.isBlank()) {
+            return null;
+        }
+
+        try {
+            // Jsoup 연결 설정
+            Document doc = Jsoup.connect(url)
+                    .userAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36") // 봇 차단 방지
+                    .timeout(5000) // 5초 타임아웃 (너무 오래 걸리면 포기)
+                    .get();
+
+            // 1순위: og:image 메타 태그
+            Element metaOgImage = doc.selectFirst("meta[property=og:image]");
+            if (metaOgImage != null) {
+                return metaOgImage.attr("content");
+            }
+
+            // 2순위: twitter:image 메타 태그 (트위터 카드 등)
+            Element metaTwitterImage = doc.selectFirst("meta[name=twitter:image]");
+            if (metaTwitterImage != null) {
+                return metaTwitterImage.attr("content");
+            }
+
+        } catch (Exception e) {
+            // 파싱 실패 시 로그만 남기고 null 반환 (아이템 생성은 계속 진행되어야 함)
+            // log.warn("썸네일 추출 실패 URL: {}, 에러: {}", url, e.getMessage());
+            return null;
+        }
+        return null;
+    }
 
     //아이템 단일 조회
     @Override
