@@ -256,6 +256,7 @@ public class ItemServiceImpl implements ItemService{
 
         // 1. 휴지통 조건
         if ("trash".equals(filter)) {
+
             // 1. 직접 삭제된 폴더들 조회 (FolderRepository에 추가한 쿼리 호출)
             List<Folder> trashFolders = folderRepository.findTrashFoldersOnly(userId, searchKeyword);
 
@@ -276,6 +277,7 @@ public class ItemServiceImpl implements ItemService{
 
             // 아이템 변환
             for (Item item : trashItems) {
+
                 trashList.add(TrashResponse.builder()
                         .type("ITEM")
                         .id(item.getItemId())
@@ -283,6 +285,11 @@ public class ItemServiceImpl implements ItemService{
                         // Item의 deletedAt은 이미 LocalDateTime이거나 LocalDate일 수 있음 (엔티티 기준 확인 필요)
                         .deletedAt(item.getDeletedAt())
                         .folderName(item.getFolder() != null ? item.getFolder().getFolderName() : "미지정")
+                        .tags(item.getItemTags().stream()
+                                .map(it -> it.getTag().getTagName())
+                                .collect(Collectors.toList()))
+                        .importance(item.isImportance())
+                        .createdAt(item.getCreatedAt())
                         .build());
             }
 

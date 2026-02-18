@@ -177,11 +177,19 @@ public interface ItemRepository extends JpaRepository<Item, Long>{
             @Param("keyword") String keyword);
 
     @Query("SELECT DISTINCT i FROM Item i " +
+            "LEFT JOIN i.folder f " +
+            "LEFT JOIN i.itemTags it " +
+            "LEFT JOIN it.tag t " +
             "WHERE i.user.userId = :userId " +
             "AND i.status = 'TRASH' " +
-            "AND (i.folder IS NULL OR i.folder.status = 'ACTIVE') " +
-            "AND (i.title LIKE %:keyword% OR i.memo LIKE %:keyword%)")
+            "AND (f IS NULL OR f.status = 'ACTIVE') " + 
+            "AND (" +
+            "   i.title LIKE CONCAT('%', :keyword, '%') " +
+            "   OR i.memo LIKE CONCAT('%', :keyword, '%') " +
+            "   OR t.tagName LIKE CONCAT('%', :keyword, '%')" +
+            ")")
     List<Item> findTrashItemsOnly(@Param("userId") Long userId, @Param("keyword") String keyword);
+
 
     // 5. [전체/기본] + [검색] (필터 없을 때 사용)
     @Query("SELECT DISTINCT i FROM Item i " +

@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Getter;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Getter
 @Builder
@@ -24,4 +25,18 @@ public class TrashResponse {
 
     @Schema(description = "원래 소속 폴더 이름 (아이템인 경우)")
     private String folderName;
+
+    @Schema(description = "중요도")
+    private boolean importance;
+
+    @Schema(description = "생성일")
+    private LocalDateTime createdAt;
+
+    @Schema(description = "자식갯수")
+    private int childCount;
+
+    @Schema(description = "태그")
+    private List<String> tags;
+
+
 }
