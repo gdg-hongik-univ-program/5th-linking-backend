@@ -41,6 +41,10 @@ public class ItemCreateResponse {
         @Schema(description = "아이템에 연결된 태그 이름 리스트", example = "[\"요리\", \"레시피\"]")
         private List<String> tags;
 
+        @Schema(description = "썸네일 저장 링크", example = "[\"요리\", \"레시피\"]")
+        private String imageUrl;
+
+
     public ItemCreateResponse(Long itemId, Folder folder, String title, String memo, boolean importance, LocalDate deadline) {
     }
 }
