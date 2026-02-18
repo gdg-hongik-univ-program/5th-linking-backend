@@ -100,6 +100,7 @@ public class Item {
             joinColumns = @JoinColumn(name = "from_id"),    // 현재 아이템(출발점) 외래키
             inverseJoinColumns = @JoinColumn(name = "to_id") // 연결될 아이템(도착점) 외래키
     )
+    @OnDelete(action = OnDeleteAction.CASCADE) // item이 사라지면 item_tag 테이블 값도 제거하기
     private List<Item> relatedItems = new ArrayList<>();
 
     // 연결 편의 메서드
