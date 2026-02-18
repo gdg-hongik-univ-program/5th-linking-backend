@@ -270,8 +270,7 @@ public class ItemServiceImpl implements ItemService{
                         .type("FOLDER")
                         .id(folder.getFId())
                         .title(folder.getFolderName())
-                        // Folder의 deletedAt은 LocalDate이므로 LocalDateTime으로 변환
-                        .deletedAt(folder.getDeletedAt() != null ? folder.getDeletedAt().atStartOfDay() : null)
+                        .deletedAt(folder.getDeletedAt())
                         .build());
             }
 
@@ -282,7 +281,7 @@ public class ItemServiceImpl implements ItemService{
                         .id(item.getItemId())
                         .title(item.getTitle())
                         // Item의 deletedAt은 이미 LocalDateTime이거나 LocalDate일 수 있음 (엔티티 기준 확인 필요)
-                        .deletedAt(item.getDeletedAt() != null ? item.getDeletedAt().atStartOfDay() : null)
+                        .deletedAt(item.getDeletedAt())
                         .folderName(item.getFolder() != null ? item.getFolder().getFolderName() : "미지정")
                         .build());
             }

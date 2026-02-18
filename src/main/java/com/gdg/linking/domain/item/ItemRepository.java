@@ -58,7 +58,7 @@ public interface ItemRepository extends JpaRepository<Item, Long>{
     void deleteRelationsByItemIds(@Param("itemIds") List<Long> itemIds);
 
     // 상태가 TRASH이고 deletedAt이 30일 이전인 아이템 조회
-    List<Item> findByStatusAndDeletedAtBefore(Item.ItemStatus status, LocalDate threshold);
+    List<Item> findByStatusAndDeletedAtBefore(Item.ItemStatus status, LocalDateTime threshold);
 
     // UserId와 Status 조회
     List<Item> findByUser_UserIdAndStatus(Long userId, Item.ItemStatus status);

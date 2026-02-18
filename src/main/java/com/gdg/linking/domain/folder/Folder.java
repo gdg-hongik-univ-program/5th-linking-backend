@@ -62,13 +62,12 @@ public class Folder {
     private Item.ItemStatus status = Item.ItemStatus.ACTIVE; // 기본값은 ACTIVE
 
     @Column(name = "deleted_at")
-    private java.time.LocalDate deletedAt; // 삭제된 날짜 기록
+    private LocalDateTime deletedAt;
 
-    // 상태 변경을 위한 편의 메서드
     public void updateStatus(Item.ItemStatus status) {
         this.status = status;
         if (status == Item.ItemStatus.TRASH) {
-            this.deletedAt = java.time.LocalDate.now();
+            this.deletedAt = LocalDateTime.now();
         } else {
             this.deletedAt = null;
         }

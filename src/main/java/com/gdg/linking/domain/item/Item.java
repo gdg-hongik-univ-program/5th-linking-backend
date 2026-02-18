@@ -74,7 +74,7 @@ public class Item {
     private ItemStatus status = ItemStatus.ACTIVE;
 
     @Column(name = "deleted_at")
-    private LocalDate deletedAt;
+    private LocalDateTime deletedAt;
 
     @CreatedDate
     @Column(name = "created_at")
@@ -126,7 +126,7 @@ public class Item {
     public void updateStatus(ItemStatus status) {
         this.status = status;
         if (status == ItemStatus.TRASH) {
-            this.deletedAt = LocalDate.now();
+            this.deletedAt = LocalDateTime.now();
         }
     }
 
