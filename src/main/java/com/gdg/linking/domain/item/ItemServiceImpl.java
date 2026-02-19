@@ -140,8 +140,9 @@ public class ItemServiceImpl implements ItemService{
         try {
             // Jsoup 연결 설정
             Document doc = Jsoup.connect(url)
-                    .userAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36") // 봇 차단 방지
-                    .timeout(5000) // 5초 타임아웃 (너무 오래 걸리면 포기)
+                    .userAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36")
+                    .header("Accept-Language", "ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7") // 한국어 설정 추가
+                    .timeout(5000) // 타임아웃 5초(너무 오래 걸리면 포기)
                     .get();
 
             // 1순위: og:image 메타 태그
