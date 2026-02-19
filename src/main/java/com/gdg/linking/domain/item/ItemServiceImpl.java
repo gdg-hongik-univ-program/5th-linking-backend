@@ -158,8 +158,10 @@ public class ItemServiceImpl implements ItemService{
             }
 
         } catch (Exception e) {
-            // 파싱 실패 시 로그만 남기고 null 반환 (아이템 생성은 계속 진행되어야 함)
-            // log.warn("썸네일 추출 실패 URL: {}, 에러: {}", url, e.getMessage());
+            System.out.println("--- OG Extraction Error Start ---");
+            System.out.println("URL: " + url);
+            e.printStackTrace();
+            System.out.println("--- OG Extraction Error End ---");
             return null;
         }
         return null;
