@@ -38,5 +38,7 @@ public class TrashResponse {
     @Schema(description = "태그")
     private List<String> tags;
 
+    @Schema(description = "썸네일 저장 링크", example = "[\"요리\", \"레시피\"]")
+    private String imageUrl;
 
 }

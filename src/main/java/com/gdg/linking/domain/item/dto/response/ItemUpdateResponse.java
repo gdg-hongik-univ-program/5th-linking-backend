@@ -42,4 +42,7 @@ public class ItemUpdateResponse {
     @Schema(description = "변경된 폴더 ID", example = "3")
     private Long folderId;
 
+    @Schema(description = "썸네일 저장 링크", example = "[\"요리\", \"레시피\"]")
+    private String imageUrl;
+
 }

@@ -49,5 +49,7 @@ public class ItemGetResponse {
     @Schema(description = "최근 수정/복구 날짜", example = "2026-02-05T13:19:00")
     private LocalDateTime updatedAt;
 
+    @Schema(description = "썸네일 저장 링크", example = "[\"요리\", \"레시피\"]")
+    private String imageUrl;
 
 }

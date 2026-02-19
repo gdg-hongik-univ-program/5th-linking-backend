@@ -132,44 +132,56 @@ public class ItemServiceImpl implements ItemService{
     }
 
 
+    // URL로부터 썸네일 이미지를 추출하는 메서드
     private String extractOgImage(String url) {
         if (url == null || url.isBlank()) return null;
 
-        // 유튜브 URL일 경우 패턴으로 썸네일 직접 생성
+        // 1. 유튜브 URL일 경우 패턴 분석을 통해 썸네일 주소 직접 생성
         if (url.contains("youtube.com") || url.contains("youtu.be")) {
             String videoId = extractYoutubeVideoId(url);
             if (videoId != null) {
-                String thumbUrl = "https://img.youtube.com/vi/" + videoId + "/mqdefault.jpg";
-                System.out.println(">>> [유튜브 전용 성공] 추출된 이미지: " + thumbUrl);
-                return thumbUrl;
+                // 고화질(hqdefault) 또는 표준화질(mqdefault) 선택 가능
+                return "https://img.youtube.com/vi/" + videoId + "/mqdefault.jpg";
             }
         }
 
+        // 일반 사이트일 경우 Jsoup을 사용하여 og:image 메타 태그 추출
         try {
             Document doc = Jsoup.connect(url)
                     .userAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36")
                     .referrer("https://www.google.com")
-                    .timeout(10000)
+                    .header("Accept-Language", "ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7") // 한국어 지원
+                    .timeout(5000) // 타임아웃 5초
                     .get();
 
-            System.out.println(">>> 접속한 페이지 제목: " + doc.title());
-
+            // og:image 태그 우선 탐색
             Element metaOgImage = doc.selectFirst("meta[property=og:image]");
             if (metaOgImage != null) {
                 return metaOgImage.attr("content");
             }
+
+            // 트위터 카드 이미지 등 대체 태그 탐색
+            Element metaTwitterImage = doc.selectFirst("meta[name=twitter:image]");
+            if (metaTwitterImage != null) {
+                return metaTwitterImage.attr("content");
+            }
+
         } catch (Exception e) {
-            e.printStackTrace();
+            // 운영 환경에서는 필요한 경우에만 로그를 남김
+            System.err.println("OG Image extraction failed for URL: " + url + " | Error: " + e.getMessage());
         }
+
         return null;
     }
 
-    // 유튜브 비디오 ID를 추출하는 헬퍼 메서드
+    // 유튜브 URL에서 비디오 ID만 추출하는 헬퍼 메서드
     private String extractYoutubeVideoId(String url) {
         try {
             if (url.contains("v=")) {
+                // https://www.youtube.com/watch?v=비디오ID 형태
                 return url.split("v=")[1].split("&")[0];
             } else if (url.contains("youtu.be/")) {
+                // https://youtu.be/비디오ID 형태
                 return url.split("youtu.be/")[1].split("\\?")[0];
             }
         } catch (Exception e) {
@@ -178,44 +190,6 @@ public class ItemServiceImpl implements ItemService{
         return null;
     }
 
-    /*
-    // [추가됨] 썸네일 추출 전용 헬퍼 메서드
-    private String extractOgImage(String url) {
-        if (url == null || url.isBlank()) {
-            return null;
-        }
-
-        try {
-            // Jsoup 연결 설정
-            Document doc = Jsoup.connect(url)
-                    .userAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36")
-                    .header("Accept-Language", "ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7") // 한국어 설정 추가
-                    .timeout(5000) // 타임아웃 5초(너무 오래 걸리면 포기)
-                    .get();
-
-            // 1순위: og:image 메타 태그
-            Element metaOgImage = doc.selectFirst("meta[property=og:image]");
-            if (metaOgImage != null) {
-                return metaOgImage.attr("content");
-            }
-
-            // 2순위: twitter:image 메타 태그 (트위터 카드 등)
-            Element metaTwitterImage = doc.selectFirst("meta[name=twitter:image]");
-            if (metaTwitterImage != null) {
-                return metaTwitterImage.attr("content");
-            }
-
-        } catch (Exception e) {
-            System.out.println("--- OG Extraction Error Start ---");
-            System.out.println("URL: " + url);
-            e.printStackTrace();
-            System.out.println("--- OG Extraction Error End ---");
-            return null;
-        }
-        return null;
-    }
-
-     */
 
     //아이템 단일 조회
     @Override
@@ -241,6 +215,7 @@ public class ItemServiceImpl implements ItemService{
                         .map(it -> it.getTag().getTagName())
                         .collect(Collectors.toList()))
                 .updatedAt(item.getUpdatedAt())
+                .imageUrl(item.getImageUrl())
                 .build();
 
         return response;
@@ -304,6 +279,7 @@ public class ItemServiceImpl implements ItemService{
                         .map(it -> it.getTag().getTagName())
                         .collect(Collectors.toList()))
                 .updatedAt(item.getUpdatedAt())
+                .imageUrl(item.getImageUrl())
                 .build();
 
 
@@ -382,6 +358,7 @@ public class ItemServiceImpl implements ItemService{
                                 .collect(Collectors.toList()))
                         .importance(item.isImportance())
                         .createdAt(item.getCreatedAt())
+                        .imageUrl(item.getImageUrl())
                         .build());
             }
 
@@ -438,6 +415,7 @@ public class ItemServiceImpl implements ItemService{
                                 .collect(Collectors.toList()))
                         .createdAt(item.getCreatedAt())
                         .updatedAt(item.getUpdatedAt())
+                        .imageUrl(item.getImageUrl())
                         .build())
                 .collect(Collectors.toList());
     }
@@ -528,6 +506,7 @@ public class ItemServiceImpl implements ItemService{
                                 .collect(Collectors.toList()))
                         .createdAt(item.getCreatedAt())
                         .updatedAt(item.getUpdatedAt())
+                        .imageUrl(item.getImageUrl())
                         .build())
                 .collect(Collectors.toList());
 
