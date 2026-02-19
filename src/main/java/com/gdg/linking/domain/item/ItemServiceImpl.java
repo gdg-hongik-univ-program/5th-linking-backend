@@ -133,33 +133,34 @@ public class ItemServiceImpl implements ItemService{
 
 
     private String extractOgImage(String url) {
-        if (url == null || url.isBlank()) return null;
-
         try {
-            // 1. 브라우저인 척 속이는 User-Agent와 타임아웃 강화
             Document doc = Jsoup.connect(url)
+                    // 1. 더 리얼한 최신 크롬 브라우저 정보
                     .userAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36")
+                    // 2. 구글에서 검색해서 들어온 것처럼 속이기
+                    .referrer("https://www.google.com")
+                    // 3. 쿠키 허용 및 언어 설정
                     .header("Accept-Language", "ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7")
-                    .timeout(8000)
+                    .followRedirects(true)
+                    .timeout(10000) // 10초로 넉넉하게
                     .get();
 
-            // 2. 이미지 추출 시도 및 성공 로그 출력
+            // [확인 로그 추가] 실제 페이지 제목이 찍히는지 보세요. 빈 페이지면 제목이 'YouTube'가 아닐 겁니다.
+            System.out.println(">>> 접속한 페이지 제목: " + doc.title());
+
             Element metaOgImage = doc.selectFirst("meta[property=og:image]");
             if (metaOgImage != null) {
                 String imageUrl = metaOgImage.attr("content");
-                System.out.println(">>> [성공] 추출된 이미지 URL: " + imageUrl); // 서버 터미널에서 확인용
+                System.out.println(">>> [성공] 추출된 URL: " + imageUrl);
                 return imageUrl;
             }
 
-            System.out.println(">>> [실패] 메타 태그에 이미지가 없음: " + url);
-            return null;
-
+            System.out.println(">>> [실패] 메타 태그 없음: " + url);
         } catch (Exception e) {
-            // 3. 에러 발생 시 상세 원인 출력
-            System.out.println(">>> [에러] OG 추출 중 예외 발생: " + url);
+            System.out.println(">>> [에러] 접속 예외 발생");
             e.printStackTrace();
-            return null;
         }
+        return null;
     }
 
     /*
