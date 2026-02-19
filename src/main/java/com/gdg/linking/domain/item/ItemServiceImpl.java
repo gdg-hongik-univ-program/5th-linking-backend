@@ -133,32 +133,47 @@ public class ItemServiceImpl implements ItemService{
 
 
     private String extractOgImage(String url) {
+        if (url == null || url.isBlank()) return null;
+
+        // 유튜브 URL일 경우 패턴으로 썸네일 직접 생성
+        if (url.contains("youtube.com") || url.contains("youtu.be")) {
+            String videoId = extractYoutubeVideoId(url);
+            if (videoId != null) {
+                String thumbUrl = "https://img.youtube.com/vi/" + videoId + "/mqdefault.jpg";
+                System.out.println(">>> [유튜브 전용 성공] 추출된 이미지: " + thumbUrl);
+                return thumbUrl;
+            }
+        }
+
         try {
             Document doc = Jsoup.connect(url)
-                    // 1. 더 리얼한 최신 크롬 브라우저 정보
                     .userAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36")
-                    // 2. 구글에서 검색해서 들어온 것처럼 속이기
                     .referrer("https://www.google.com")
-                    // 3. 쿠키 허용 및 언어 설정
-                    .header("Accept-Language", "ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7")
-                    .followRedirects(true)
-                    .timeout(10000) // 10초로 넉넉하게
+                    .timeout(10000)
                     .get();
 
-            // [확인 로그 추가] 실제 페이지 제목이 찍히는지 보세요. 빈 페이지면 제목이 'YouTube'가 아닐 겁니다.
             System.out.println(">>> 접속한 페이지 제목: " + doc.title());
 
             Element metaOgImage = doc.selectFirst("meta[property=og:image]");
             if (metaOgImage != null) {
-                String imageUrl = metaOgImage.attr("content");
-                System.out.println(">>> [성공] 추출된 URL: " + imageUrl);
-                return imageUrl;
+                return metaOgImage.attr("content");
             }
-
-            System.out.println(">>> [실패] 메타 태그 없음: " + url);
         } catch (Exception e) {
-            System.out.println(">>> [에러] 접속 예외 발생");
             e.printStackTrace();
+        }
+        return null;
+    }
+
+    // 유튜브 비디오 ID를 추출하는 헬퍼 메서드
+    private String extractYoutubeVideoId(String url) {
+        try {
+            if (url.contains("v=")) {
+                return url.split("v=")[1].split("&")[0];
+            } else if (url.contains("youtu.be/")) {
+                return url.split("youtu.be/")[1].split("\\?")[0];
+            }
+        } catch (Exception e) {
+            return null;
         }
         return null;
     }
