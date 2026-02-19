@@ -131,6 +131,38 @@ public class ItemServiceImpl implements ItemService{
         return response;
     }
 
+
+    private String extractOgImage(String url) {
+        if (url == null || url.isBlank()) return null;
+
+        try {
+            // 1. 브라우저인 척 속이는 User-Agent와 타임아웃 강화
+            Document doc = Jsoup.connect(url)
+                    .userAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36")
+                    .header("Accept-Language", "ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7")
+                    .timeout(8000)
+                    .get();
+
+            // 2. 이미지 추출 시도 및 성공 로그 출력
+            Element metaOgImage = doc.selectFirst("meta[property=og:image]");
+            if (metaOgImage != null) {
+                String imageUrl = metaOgImage.attr("content");
+                System.out.println(">>> [성공] 추출된 이미지 URL: " + imageUrl); // 서버 터미널에서 확인용
+                return imageUrl;
+            }
+
+            System.out.println(">>> [실패] 메타 태그에 이미지가 없음: " + url);
+            return null;
+
+        } catch (Exception e) {
+            // 3. 에러 발생 시 상세 원인 출력
+            System.out.println(">>> [에러] OG 추출 중 예외 발생: " + url);
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    /*
     // [추가됨] 썸네일 추출 전용 헬퍼 메서드
     private String extractOgImage(String url) {
         if (url == null || url.isBlank()) {
@@ -166,6 +198,8 @@ public class ItemServiceImpl implements ItemService{
         }
         return null;
     }
+
+     */
 
     //아이템 단일 조회
     @Override
