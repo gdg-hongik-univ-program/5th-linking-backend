@@ -42,7 +42,10 @@ public class UserServiceImpl implements UserService{
                 .build();
 
         userRepository.save(user);
-        UserCreateResponse result = new UserCreateResponse(request.getLoginId());
+        UserCreateResponse result = new UserCreateResponse(
+                request.getLoginId(),
+                request.getProfileImage()
+                );
 
         return result;
     }
@@ -52,17 +55,25 @@ public class UserServiceImpl implements UserService{
     @Transactional
     public UserLoginResponse login(UserLoginRequest request) {
 
-        String encryptPassword = encryptSHA256(request.getPassword());
+        // 1. 아이디를 기준으로 먼저 사용자 조회
+        User user = userRepository.findByLoginId(request.getLoginId());
 
-        User user = userRepository.findByIdAndPassword(request.getLoginId(),encryptPassword);
-
-        if(user == null) {
+        // 2. 사용자가 데이터베이스에 아예 존재하지 않는 경우
+        if (user == null) {
+            // ErrorMessage enum에 "존재하지 않는 사용자입니다"에 해당하는 상수를 넣어주세요.
             throw new BadRequestException(ErrorMessage.MEMBER_NOTFOUND);
         }
 
-        UserLoginResponse response = new UserLoginResponse(user.getUserId(), user.getLoginId(),user.isAdmin());
+        // 3. 사용자가 존재한다면, 입력받은 비밀번호를 암호화하여 DB의 비밀번호와 비교
+        String encryptPassword = encryptSHA256(request.getPassword());
 
-        return response;
+        if (!user.getPassword().equals(encryptPassword)) {
+            // ErrorMessage enum에 "아이디나 비밀번호가 틀렸습니다"에 해당하는 상수를 넣어주세요.
+            throw new BadRequestException(ErrorMessage.INVALID_PASSWORD);
+        }
+
+        // 4. 아이디와 비밀번호가 모두 맞다면 로그인 성공 응답 반환
+        return new UserLoginResponse(user.getUserId(), user.getLoginId(), user.isAdmin());
     }
 
     @Override
