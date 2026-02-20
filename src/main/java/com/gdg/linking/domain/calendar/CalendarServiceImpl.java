@@ -70,7 +70,7 @@ public class CalendarServiceImpl implements CalendarService {
     @Transactional
     public CalendarDayResponse getCalendarDayData(LocalDate date, Long userId) {
         // 1. 해당 날짜가 마감일(Deadline)인 아이템 조회
-        List<Item> deadlineItems = itemRepository.findByUser_UserIdAndDeadlineOrderByDeadlineAsc(userId, date);
+        List<Item> deadlineItems = itemRepository.findItemsByUserIdAndDeadline(userId, date);
 
         // 2. 해당 날짜가 생성일(CreatedAt)인 아이템 조회 (00:00:00 ~ 23:59:59)
         LocalDateTime startDateTime = date.atStartOfDay();
