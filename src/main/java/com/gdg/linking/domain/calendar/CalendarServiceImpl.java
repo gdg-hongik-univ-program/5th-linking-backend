@@ -5,6 +5,7 @@ import com.gdg.linking.domain.calendar.dto.response.CalendarMonthResponse;
 import com.gdg.linking.domain.calendar.dto.response.CalendarDayResponse;
 import com.gdg.linking.domain.item.Item;
 import com.gdg.linking.domain.item.ItemRepository;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -26,6 +27,7 @@ public class CalendarServiceImpl implements CalendarService {
     /**
      * 월별 캘린더 요약 정보 조회
      */
+    @Transactional
     @Override
     public CalendarMonthResponse getCalendarMonthData(int year, int month, Long userId) {
         // 1. 해당 월의 범위 계산
@@ -62,6 +64,7 @@ public class CalendarServiceImpl implements CalendarService {
     /**
      * 특정 날짜의 상세 일정 조회
      */
+    @Transactional
     @Override
     public CalendarDayResponse getCalendarDayData(LocalDate date, Long userId) {
         // 1. 해당 날짜가 마감일(Deadline)인 아이템 조회
