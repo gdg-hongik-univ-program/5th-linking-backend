@@ -285,7 +285,44 @@ public class ItemServiceImpl implements ItemService{
 
     }
 
+    @Override
+    @Transactional
+    public void emptyTrash(Long userId) {
+        // 1. 해당 유저의 아이템 중 상태가 TRASH이거나 ORPHAN인 것들을 모두 조회
+        // 리포지토리에 findByUserIdAndStatusIn 메서드를 추가하거나 아래처럼 각각 조회 후 합칩니다.
+        List<Item.ItemStatus> targetStatuses = List.of(Item.ItemStatus.TRASH, Item.ItemStatus.ORPHAN);
+        List<Item> itemsToDelete = itemRepository.findByUser_UserIdAndStatusIn(userId, targetStatuses);
 
+        // 2. 해당 유저의 폴더 중 상태가 TRASH인 것 조회
+        List<Folder> trashFolders = folderRepository.findByUser_UserIdAndStatus(userId, Item.ItemStatus.TRASH);
+
+        // 아이템 삭제 프로세스
+        if (!itemsToDelete.isEmpty()) {
+            List<Long> itemIds = itemsToDelete.stream()
+                    .map(Item::getItemId)
+                    .collect(Collectors.toList());
+
+            // A. 연관 데이터(태그) 수동 일괄 삭제
+            itemTagRepository.deleteByItemIn(itemsToDelete);
+
+            // B. 아이템 간 연결 관계(Relations) 삭제
+            itemRepository.deleteRelationsByItemIds(itemIds);
+
+            // C, 아이템 태그 삭제
+            itemTagRepository.flush();
+
+            // D. 아이템 데이터 영구 삭제
+            itemRepository.deleteAllInBatch(itemsToDelete);
+        }
+
+        // 폴더 삭제 프로세스
+        if (!trashFolders.isEmpty()) {
+            // 폴더를 지우면 상위 폴더 삭제 시 하위 폴더도 Cascade 설정에 따라 함께 지워짐
+            folderRepository.deleteAllInBatch(trashFolders);
+        }
+    }
+
+    /*
     @Override
     @Transactional
     public void emptyTrash(Long userId) {
@@ -316,6 +353,8 @@ public class ItemServiceImpl implements ItemService{
             folderRepository.deleteAllInBatch(trashFolders);
         }
     }
+
+     */
 
     @Override
     @Transactional(readOnly = true)

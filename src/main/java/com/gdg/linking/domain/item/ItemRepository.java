@@ -57,6 +57,8 @@ public interface ItemRepository extends JpaRepository<Item, Long>{
     @Query(value = "DELETE FROM item_relations WHERE from_id IN :itemIds OR to_id IN :itemIds", nativeQuery = true)
     void deleteRelationsByItemIds(@Param("itemIds") List<Long> itemIds);
 
+    List<Item> findByUser_UserIdAndStatusIn(Long userId, List<Item.ItemStatus> statuses);
+
     // 상태가 TRASH이고 deletedAt이 30일 이전인 아이템 조회
     List<Item> findByStatusAndDeletedAtBefore(Item.ItemStatus status, LocalDateTime threshold);
 
