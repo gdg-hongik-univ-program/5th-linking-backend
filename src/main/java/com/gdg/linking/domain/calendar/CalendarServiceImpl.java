@@ -27,8 +27,9 @@ public class CalendarServiceImpl implements CalendarService {
     /**
      * 월별 캘린더 요약 정보 조회
      */
-    @Transactional
+
     @Override
+    @Transactional
     public CalendarMonthResponse getCalendarMonthData(int year, int month, Long userId) {
         // 1. 해당 월의 범위 계산
         LocalDate startLocalDate = LocalDate.of(year, month, 1);
@@ -64,12 +65,12 @@ public class CalendarServiceImpl implements CalendarService {
     /**
      * 특정 날짜의 상세 일정 조회
      */
-    @Transactional
+
     @Override
+    @Transactional
     public CalendarDayResponse getCalendarDayData(LocalDate date, Long userId) {
         // 1. 해당 날짜가 마감일(Deadline)인 아이템 조회
-        List<Item> deadlineItems = itemRepository.findByUser_UserIdAndDeadlineBetweenOrderByDeadlineAsc(
-                userId, date, date);
+        List<Item> deadlineItems = itemRepository.findByUser_UserIdAndDeadlineOrderByDeadlineAsc(userId, date);
 
         // 2. 해당 날짜가 생성일(CreatedAt)인 아이템 조회 (00:00:00 ~ 23:59:59)
         LocalDateTime startDateTime = date.atStartOfDay();

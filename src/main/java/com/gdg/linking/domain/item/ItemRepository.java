@@ -78,7 +78,9 @@ public interface ItemRepository extends JpaRepository<Item, Long>{
     // 특정 사용자의 아이템 중, deadline이 특정 기간 사이인 데이터 조회 (마감일순 정렬)
     List<Item> findByUser_UserIdAndDeadlineBetweenOrderByDeadlineAsc(
             Long userId, LocalDate start, LocalDate end);
-
+    
+    // 사용자의 deadline을 기준으로 검색
+    List<Item> findByUser_UserIdAndDeadlineOrderByDeadlineAsc(Long userId, LocalDate deadline);
     // 특정 사용자의 아이템 중, 생성일이 특정 기간 사이인 데이터 조회
     @EntityGraph(attributePaths = {"itemTags"})
     List<Item> findByUser_UserIdAndCreatedAtBetween(
