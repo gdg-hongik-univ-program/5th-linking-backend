@@ -374,11 +374,27 @@ public class ItemServiceImpl implements ItemService{
 
             // 폴더 변환
             for (Folder folder : trashFolders) {
+
+                // 바로 아래 자식 폴더 개수 (상태가 ORPHAN인 직속 폴더만)
+                long directChildFolderCount = folder.getChildFolders().stream()
+                        .filter(child -> child.getStatus() == Item.ItemStatus.ORPHAN)
+                        .count();
+
+                // 바로 아래 자식 아이템 개수 (상태가 ORPHAN인 직속 아이템만)
+                long directChildItemCount = folder.getItems().stream()
+                        .filter(item -> item.getStatus() == Item.ItemStatus.ORPHAN)
+                        .count();
+
+                // 두 개수를 합산
+                int directTotalCount = (int) (directChildFolderCount + directChildItemCount);
+
                 trashList.add(TrashResponse.builder()
                         .type("FOLDER")
                         .id(folder.getFId())
                         .title(folder.getFolderName())
+                        .createdAt(folder.getCreatedAt())
                         .deletedAt(folder.getDeletedAt())
+                        .totalCount(directTotalCount)
                         .build());
             }
 

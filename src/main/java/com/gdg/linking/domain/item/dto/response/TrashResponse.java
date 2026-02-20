@@ -32,6 +32,12 @@ public class TrashResponse {
     @Schema(description = "생성일")
     private LocalDateTime createdAt;
 
+    @Schema(description = "속한 링크(아이템) 수", example = "15")
+    private int itemCount;
+
+    @Schema(description = "하위 항목 개수", example = "15")
+    private int totalCount;
+
     @Schema(description = "자식갯수")
     private int childCount;
 
