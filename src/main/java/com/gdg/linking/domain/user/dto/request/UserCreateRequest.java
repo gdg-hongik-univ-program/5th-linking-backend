@@ -23,6 +23,6 @@ public class UserCreateRequest {
     private String nickName;
 
     @Schema(description = "사용자 프로필 사진", example = "PAWN")
-    private String profileImage;
+    private String imageCode;
 
 }

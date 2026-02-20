@@ -38,13 +38,13 @@ public class UserServiceImpl implements UserService{
                 .email(request.getEmail())
                 .nickName(request.getNickName())
                 .isAdmin(false)
-                .profileImage(request.getProfileImage())
+                .profileImage(request.getImageCode())
                 .build();
 
         userRepository.save(user);
         UserCreateResponse result = new UserCreateResponse(
-                request.getLoginId(),
-                request.getProfileImage()
+                user.getLoginId(),
+                user.getProfileImage()
                 );
 
         return result;
