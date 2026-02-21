@@ -132,46 +132,55 @@ public class ItemServiceImpl implements ItemService{
     }
 
 
-    // URL로부터 썸네일 이미지를 추출하는 메서드
     private String extractOgImage(String url) {
         if (url == null || url.isBlank()) return null;
 
-        // 1. 유튜브 URL일 경우 패턴 분석을 통해 썸네일 주소 직접 생성
+        // 유튜브 전용 처리
         if (url.contains("youtube.com") || url.contains("youtu.be")) {
             String videoId = extractYoutubeVideoId(url);
             if (videoId != null) {
-                // 고화질(hqdefault) 또는 표준화질(mqdefault) 선택 가능
                 return "https://img.youtube.com/vi/" + videoId + "/mqdefault.jpg";
             }
         }
 
-        // 일반 사이트일 경우 Jsoup을 사용하여 og:image 메타 태그 추출
+        // 네이버 블로그 전용 처리
+        if (url.contains("blog.naver.com") && !url.contains("m.blog.naver.com")) {
+            url = url.replace("blog.naver.com", "m.blog.naver.com");
+        }
+
+        // 사이트 메타 태그 추출 시도 (Jsoup 활용)
         try {
+            // Jsoup 연결 설정 보강
             Document doc = Jsoup.connect(url)
-                    .userAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36")
-                    .referrer("https://www.google.com")
-                    .header("Accept-Language", "ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7") // 한국어 지원
-                    .timeout(5000) // 타임아웃 5초
+                    .userAgent("Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1")
+                    .referrer("https://m.naver.com")
+                    .timeout(10000)
                     .get();
 
-            // og:image 태그 우선 탐색
+            // og:image 추출 시도
             Element metaOgImage = doc.selectFirst("meta[property=og:image]");
-            if (metaOgImage != null) {
-                return metaOgImage.attr("content");
+            if (metaOgImage != null && !metaOgImage.attr("content").isBlank()) {
+                String ogImageUrl = metaOgImage.attr("content");
+
+                // 네이버 블로그 이미지 주소가 상대 경로일 경우를 대비해 절대 경로로 변환
+                if (ogImageUrl.startsWith("/")) {
+                    ogImageUrl = doc.baseUri() + ogImageUrl;
+                }
+                return ogImageUrl;
             }
 
-            // 트위터 카드 이미지 등 대체 태그 탐색
+            // twitter:image 추출 시도
             Element metaTwitterImage = doc.selectFirst("meta[name=twitter:image]");
-            if (metaTwitterImage != null) {
+            if (metaTwitterImage != null && !metaTwitterImage.attr("content").isBlank()) {
                 return metaTwitterImage.attr("content");
             }
 
         } catch (Exception e) {
-            // 운영 환경에서는 필요한 경우에만 로그를 남김
-            System.err.println("OG Image extraction failed for URL: " + url + " | Error: " + e.getMessage());
+            System.err.println("Thumbnail extraction failed for: " + url + " | " + e.getMessage());
         }
 
-        return null;
+        // 최종 실패 시 파비콘 반환
+        return "https://www.google.com/s2/favicons?domain=" + url + "&sz=128";
     }
 
     // 유튜브 URL에서 비디오 ID만 추출하는 헬퍼 메서드
