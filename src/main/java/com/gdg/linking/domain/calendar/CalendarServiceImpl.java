@@ -94,6 +94,7 @@ public class CalendarServiceImpl implements CalendarService {
                                         .collect(Collectors.toList())
                                 : Collections.emptyList()) // 태그가 없으면 빈 리스트 반환
                         .importance(item.isImportance())
+                        .imageUrl(item.getImageUrl())
                         .build())
                 .collect(Collectors.toList());
 

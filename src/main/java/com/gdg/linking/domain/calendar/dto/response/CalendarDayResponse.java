@@ -2,6 +2,7 @@ package com.gdg.linking.domain.calendar.dto.response;
 
 import com.gdg.linking.domain.item.Item;
 import com.gdg.linking.domain.tag.ItemTag;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 
 import java.time.LocalDate;
@@ -35,6 +36,8 @@ public class CalendarDayResponse {
         // 별점 표시 (이미지의 별 UI 대응용, 엔티티에 중요도 importance가 있으므로 이를 활용)
         private boolean importance;
 
+        @Schema(description = "썸네일 저장 링크", example = "[\"요리\", \"레시피\"]")
+        private String imageUrl;
 
     }
 }

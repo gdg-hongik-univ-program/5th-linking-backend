@@ -53,13 +53,13 @@ public class Item {
     @OnDelete(action = OnDeleteAction.CASCADE)
     private List<ItemTag> itemTags = new ArrayList<>();
 
-    @Column(name = "url")
+    @Column(name = "url", length = 2048)
     private String url;
 
-    @Column(name = "title")
+    @Column(name = "title", length = 70)
     private String title;
 
-    @Column(name = "memo")
+    @Column(name = "memo", length = 1024)
     private String memo;
 
     @Builder.Default
@@ -122,12 +122,18 @@ public class Item {
     }
 
     //업데이트 전용 메서드
-    public void update(String url, String title, String memo, boolean importance, LocalDate deadline) {
+    public void update(String url,
+                       String title,
+                       String memo,
+                       boolean importance,
+                       LocalDate deadline,
+                       String imageUrl) {
     this.url = url;
     this.title = title;
     this.memo = memo;
     this.importance = importance;
     this.deadline = deadline;
+    this.imageUrl = imageUrl;
     }
 
     //상태 변경 전용 메서드

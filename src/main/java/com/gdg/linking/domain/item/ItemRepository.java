@@ -132,7 +132,7 @@ public interface ItemRepository extends JpaRepository<Item, Long>{
             "WHERE i.user.userId = :userId " +
             "AND i.status = :status " +
             "AND i.deadline BETWEEN :startDate AND :endDate " +
-            "AND (i.title LIKE %:keyword% OR t.tagName LIKE %:keyword%) " +
+            "AND (i.title LIKE %:keyword% OR t.tagName LIKE %:keyword% OR i.memo LIKE %:keyword%) " +
             "ORDER BY i.deadline ASC")
     List<Item> searchUpcomingItems(
             @Param("userId") Long userId,
@@ -150,7 +150,7 @@ public interface ItemRepository extends JpaRepository<Item, Long>{
             "WHERE i.user.userId = :userId " +
             "AND i.status = :status " +
             "AND i.importance = true " +
-            "AND (i.title LIKE %:keyword% OR t.tagName LIKE %:keyword%) " +
+            "AND (i.title LIKE %:keyword% OR t.tagName LIKE %:keyword% OR i.memo LIKE %:keyword%) " +
             "ORDER BY i.createdAt DESC")
     List<Item> searchImportantItems(
             @Param("userId") Long userId,
@@ -166,7 +166,7 @@ public interface ItemRepository extends JpaRepository<Item, Long>{
             "WHERE i.user.userId = :userId " +
             "AND i.status = :status " +
             "AND (COALESCE(i.updatedAt, i.createdAt) < :targetDate) " +
-            "AND (i.title LIKE %:keyword% OR t.tagName LIKE %:keyword%) " +
+            "AND (i.title LIKE %:keyword% OR t.tagName LIKE %:keyword% OR i.memo LIKE %:keyword%) " +
             "ORDER BY i.createdAt ASC")
     List<Item> searchStaleItems(
             @Param("userId") Long userId,
@@ -210,7 +210,7 @@ public interface ItemRepository extends JpaRepository<Item, Long>{
             "LEFT JOIN it.tag t " +
             "WHERE i.user.userId = :userId " +
             "AND i.status = :status " +
-            "AND (i.title LIKE %:keyword% OR t.tagName LIKE %:keyword%) " +
+            "AND (i.title LIKE %:keyword% OR t.tagName LIKE %:keyword% OR i.memo LIKE %:keyword%) " +
             "ORDER BY i.createdAt DESC")
     List<Item> searchAllItems(
             @Param("userId") Long userId,

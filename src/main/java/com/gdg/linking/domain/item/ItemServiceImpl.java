@@ -13,6 +13,7 @@ import com.gdg.linking.domain.tag.Tag;
 import com.gdg.linking.domain.tag.TagRepository;
 import com.gdg.linking.domain.user.User;
 import com.gdg.linking.domain.user.UserRepository;
+import com.gdg.linking.global.exception.custom.BadRequestException;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -63,9 +64,11 @@ public class ItemServiceImpl implements ItemService{
                     .orElse(null); // 못 찾아도 에러 내지 않고 null 유지
         }
         if (folder != null && folder.getStatus() == Item.ItemStatus.TRASH) {
-            throw new IllegalArgumentException("휴지통에 있는 폴더에는 아이템을 추가할 수 없습니다.");
+            throw new BadRequestException("휴지통에 있는 폴더에는 아이템을 추가할 수 없습니다.");
         }
-
+        if (request.getTags().size() > 10){
+            throw new BadRequestException("태그는 최대 10개까지만 등록 가능합니다.");
+        }
         // [추가됨] 2. URL이 있다면 OG 태그(썸네일) 추출 시도
         String extractedImageUrl = extractOgImage(request.getUrl());
 
@@ -251,13 +254,16 @@ public class ItemServiceImpl implements ItemService{
 
         LocalDate oldDeadline = item.getDeadline();
 
+        String extractedImageUrl = extractOgImage(request.getUrl());
+
         // 데이터 업데이트
         item.update(
                 request.getUrl(),
                 request.getTitle(),
                 request.getMemo(),
                 request.isImportance(),
-                request.getDeadline()
+                request.getDeadline(),
+                extractedImageUrl
         );
 
 
@@ -272,6 +278,9 @@ public class ItemServiceImpl implements ItemService{
         // 태그 업데이트 (태그는 보통 별도의 연관관계 처리가 필요합니다)
         // updateTags(item, request.getTags());
         // 3. 태그 업데이트 (전체 삭제 후 재등록 방식)
+        if (request.getTags().size() > 10){
+            throw new BadRequestException("태그는 최대 10개까지만 등록 가능합니다.");
+        }
         updateTags(item, request.getTags());
 
         itemRepository.save(item);
