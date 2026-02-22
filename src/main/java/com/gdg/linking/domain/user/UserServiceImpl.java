@@ -104,6 +104,8 @@ public class UserServiceImpl implements UserService{
         }
 
         user.updateNickName(request.getNickName());
+
+        user.updateImageCode(request.getImageCode());
     }
 
     @Override
