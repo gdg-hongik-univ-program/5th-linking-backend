@@ -67,17 +67,19 @@ public class CalendarServiceImpl implements CalendarService {
     @Override
     @Transactional
     public CalendarDayResponse getCalendarDayData(LocalDate date, Long userId) {
-        // 1. 해당 날짜가 마감일이면서 ACTIVE인 '내 아이템' 조회 (DB 레벨 필터링)
-        List<Item> deadlineItems = itemRepository.findByUser_UserIdAndDeadlineAndStatus(
-                userId, date, Item.ItemStatus.ACTIVE);
+        // 1. 해당 날짜가 마감일이면서 ACTIVE인 아이템 조회
+        List<Item> deadlineItems = itemRepository.findByDeadlineAndStatus(date, Item.ItemStatus.ACTIVE)
+                .stream()
+                .filter(item -> item.getUser().getUserId().equals(userId))
+                .collect(Collectors.toList());
 
-        // 2. 해당 날짜가 생성일이면서 ACTIVE인 '내 아이템' 조회
+        // 2. 해당 날짜가 생성일이면서 ACTIVE인 아이템 조회
         LocalDateTime startDateTime = date.atStartOfDay();
         LocalDateTime endDateTime = date.atTime(LocalTime.MAX);
         List<Item> createdItems = itemRepository.findByUser_UserIdAndCreatedAtBetweenAndStatus(
                 userId, startDateTime, endDateTime, Item.ItemStatus.ACTIVE);
 
-        // 3. 데이터 병합 (중복 제거) 및 DTO 변환
+        // 3. 합치기 및 DTO 변환
         List<CalendarDayResponse.EventDetailDto> eventList = Stream.concat(deadlineItems.stream(), createdItems.stream())
                 .distinct()
                 .map(item -> CalendarDayResponse.EventDetailDto.builder()
