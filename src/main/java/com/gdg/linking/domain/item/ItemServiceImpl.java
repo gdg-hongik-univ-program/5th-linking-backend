@@ -138,51 +138,59 @@ public class ItemServiceImpl implements ItemService{
     private String extractOgImage(String url) {
         if (url == null || url.isBlank()) return null;
 
-        // 유튜브 전용 처리
+        // 유튜브 처리
         if (url.contains("youtube.com") || url.contains("youtu.be")) {
             String videoId = extractYoutubeVideoId(url);
-            if (videoId != null) {
-                return "https://img.youtube.com/vi/" + videoId + "/mqdefault.jpg";
-            }
+            if (videoId != null) return "https://img.youtube.com/vi/" + videoId + "/mqdefault.jpg";
         }
 
-        // 네이버 블로그 전용 처리
+        // 네이버 블로그 모바일 주소 변환 (우회 및 데이터 접근용)
         if (url.contains("blog.naver.com") && !url.contains("m.blog.naver.com")) {
             url = url.replace("blog.naver.com", "m.blog.naver.com");
         }
 
-        // 사이트 메타 태그 추출 시도 (Jsoup 활용)
         try {
-            // Jsoup 연결 설정 보강
             Document doc = Jsoup.connect(url)
                     .userAgent("Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1")
                     .referrer("https://m.naver.com")
                     .timeout(10000)
                     .get();
 
-            // og:image 추출 시도
+            // 블로그 작성자가 설정한 공식 썸네일(OG Tag) 우선 추출
             Element metaOgImage = doc.selectFirst("meta[property=og:image]");
             if (metaOgImage != null && !metaOgImage.attr("content").isBlank()) {
-                String ogImageUrl = metaOgImage.attr("content");
-
-                // 네이버 블로그 이미지 주소가 상대 경로일 경우를 대비해 절대 경로로 변환
-                if (ogImageUrl.startsWith("/")) {
-                    ogImageUrl = doc.baseUri() + ogImageUrl;
+                String ogContent = metaOgImage.attr("content");
+                // 네이버 기본 텍스트 썸네일(합성 이미지)이 아닐 때만 반환
+                if (!ogContent.contains("static.naver.net")) {
+                    return ogContent;
                 }
-                return ogImageUrl;
             }
 
-            // twitter:image 추출 시도
+            // 공식 썸네일이 없거나 기본 이미지일 경우, 본문의 첫 번째 실제 사진 탐색
+            if (url.contains("m.blog.naver.com")) {
+                Element firstRealImg = doc.selectFirst(".se-main-container img, .se-image-resource");
+                if (firstRealImg != null) {
+                    String src = firstRealImg.hasAttr("data-lazy-src")
+                            ? firstRealImg.attr("data-lazy-src")
+                            : firstRealImg.attr("src");
+
+                    if (src != null && !src.isBlank() && !src.contains("static.naver.net")) {
+                        return src;
+                    }
+                }
+            }
+
+            // 트위터 카드 이미지 확인
             Element metaTwitterImage = doc.selectFirst("meta[name=twitter:image]");
             if (metaTwitterImage != null && !metaTwitterImage.attr("content").isBlank()) {
                 return metaTwitterImage.attr("content");
             }
 
         } catch (Exception e) {
-            System.err.println("Thumbnail extraction failed for: " + url + " | " + e.getMessage());
+            System.err.println("Thumbnail extraction failed: " + e.getMessage());
         }
 
-        // 최종 실패 시 파비콘 반환
+        // 모든 추출 실패 시 파비콘 반환
         return "https://www.google.com/s2/favicons?domain=" + url + "&sz=128";
     }
 
