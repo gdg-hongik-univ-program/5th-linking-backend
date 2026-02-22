@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.ZoneId;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -36,9 +37,17 @@ public class CalendarServiceImpl implements CalendarService {
         LocalDate startLocalDate = LocalDate.of(year, month, 1);
         LocalDate endLocalDate = startLocalDate.withDayOfMonth(startLocalDate.lengthOfMonth());
 
-        // 시간 범위를 00:00:00 ~ 23:59:59.999 로 명확히 설정
-        LocalDateTime startDateTime = startLocalDate.atStartOfDay();
-        LocalDateTime endDateTime = endLocalDate.atTime(LocalTime.MAX);
+        ZoneId zone = ZoneId.of("Asia/Seoul");
+
+        LocalDateTime startDateTime = startLocalDate
+                .atStartOfDay(zone)
+                .toLocalDateTime();
+
+        LocalDateTime endDateTime = endLocalDate
+                .plusDays(1)
+                .atStartOfDay(zone)
+                .minusNanos(1)
+                .toLocalDateTime();
 
         // 1. ACTIVE 상태인 아이템만 조회하여 휴지통 데이터 배제
         List<Item> deadlineItems = itemRepository.findByUser_UserIdAndDeadlineBetweenAndStatusOrderByDeadlineAsc(
@@ -74,8 +83,19 @@ public class CalendarServiceImpl implements CalendarService {
                 userId, date, Item.ItemStatus.ACTIVE);
 
         // 2. 해당 날짜가 생성일이면서 ACTIVE인 내 아이템만 조회
-        LocalDateTime startDateTime = date.atStartOfDay();
-        LocalDateTime endDateTime = date.atTime(LocalTime.MAX);
+        ZoneId zone = ZoneId.of("Asia/Seoul");
+
+        LocalDateTime startDateTime = date
+                .atStartOfDay(zone)
+                .toLocalDateTime();
+
+        LocalDateTime endDateTime = date
+                .plusDays(1)
+                .atStartOfDay(zone)
+                .minusNanos(1)
+                .toLocalDateTime();
+
+
         List<Item> createdItems = itemRepository.findByUser_UserIdAndCreatedAtBetweenAndStatus(
                 userId, startDateTime, endDateTime, Item.ItemStatus.ACTIVE);
 

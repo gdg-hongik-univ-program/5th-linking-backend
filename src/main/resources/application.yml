@@ -9,6 +9,8 @@ server:
 spring:
   application:
     name: linking
+  jackson:
+    time-zone: Asia/Seoul
 
   datasource:
 
@@ -31,6 +33,8 @@ spring:
     properties:
       hibernate:
         format_sql: true
+        jdbc:
+          time_zone: Asia/Seoul
 
 Jackson:
   time-zone: Asia/Seoul
