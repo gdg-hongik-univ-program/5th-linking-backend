@@ -13,5 +13,8 @@ public class UserPatchNickRequest {
     @Schema(description = "변경할 닉네임", example = "김생산")
     private String nickName;
 
+    @Schema(description = "변경할 코드", example = "PAWN")
+    private String imageCode
+
 }
 
