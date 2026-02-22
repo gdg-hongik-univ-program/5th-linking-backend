@@ -2,6 +2,7 @@ package com.gdg.linking.domain.notification;
 
 import com.gdg.linking.domain.item.Item;
 import com.gdg.linking.domain.notification.dto.NotificationResponse;
+import com.gdg.linking.domain.user.User;
 
 import java.util.List;
 
@@ -29,4 +30,10 @@ public interface NotificationService {
 
     // 알림 전체 읽음 처리
     void markAllAsRead(Long userId);
+
+    // 레벨 업 알림
+    void createLevelUpNotification(User user, int newLevel);
+
+    // 티어 상승 알림
+    void createTierUpNotification(User user, String tierName);
 }

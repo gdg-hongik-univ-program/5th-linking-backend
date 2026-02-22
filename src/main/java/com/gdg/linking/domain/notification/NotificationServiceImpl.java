@@ -141,4 +141,34 @@ public class NotificationServiceImpl implements NotificationService {
             }
         }
     }
+
+    // 레벨 업 알림
+    @Override
+    @Transactional
+    public void createLevelUpNotification(User user, int newLevel) {
+        Notification notification = Notification.builder()
+                .user(user)
+                .type("LEVEL_UP")
+                .message(String.format("🎉 축하합니다! %d레벨로 레벨업하셨습니다!", newLevel))
+                .isRead(false)
+                .scheduledDate(LocalDate.now()) // 즉시 노출되도록 오늘 날짜 설정
+                .build();
+
+        notificationRepository.save(notification);
+    }
+
+    // 티어 상승 알림
+    @Override
+    @Transactional
+    public void createTierUpNotification(User user, String tierName) {
+        Notification notification = Notification.builder()
+                .user(user)
+                .type("TIER_UP")
+                .message(String.format("🎊 '%s' 등급으로 상승했습니다!", tierName))
+                .isRead(false)
+                .scheduledDate(LocalDate.now())
+                .build();
+
+        notificationRepository.save(notification);
+    }
 }

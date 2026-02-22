@@ -3,6 +3,8 @@ package com.gdg.linking.domain.profile;
 import com.gdg.linking.domain.item.Item;
 import com.gdg.linking.domain.item.ItemRepository;
 import com.gdg.linking.domain.item.ItemService;
+import com.gdg.linking.domain.notification.NotificationRepository;
+import com.gdg.linking.domain.notification.NotificationService;
 import com.gdg.linking.domain.profile.dto.ProfileGraphResponse;
 import com.gdg.linking.domain.profile.dto.ProfileResponse;
 import com.gdg.linking.domain.user.User;
@@ -21,6 +23,7 @@ public class ProfileServiceImpl implements ProfileService {
 
     private final UserRepository userRepository;
     private final ItemRepository itemRepository;
+    private final NotificationService notificationService;
 
     @Override
     @Transactional(readOnly = true)
@@ -55,16 +58,27 @@ public class ProfileServiceImpl implements ProfileService {
         User user = userRepository.findById(userId);
         if (user == null) return;
 
+        // 기존 정보(레벨, 티어) 저장
+        int oldLevel = user.getLevel();
+        ChessTier oldTier = ChessTier.findByXp(user.getTotalXp());
+
+        // XP 추가 및 새로운 정보 계산
         user.setTotalXp(user.getTotalXp() + amount);
+        ChessTier newTier = ChessTier.findByXp(user.getTotalXp());
+        int newLevel = calculateLevel(user.getTotalXp(), newTier);
 
-        // 현재 XP에 맞는 티어 정보 가져오기
-        ChessTier tier = ChessTier.findByXp(user.getTotalXp());
-
-        // 티어 내에서 레벨 계산
-        int newLevel = calculateLevel(user.getTotalXp(), tier);
-
+        // 유저 정보 업데이트
         user.setLevel(newLevel);
-        user.setProfileImage(tier.getImageCode()); // 등급에 맞는 이미지 코드를 DB에 저장
+
+        // 알림 생성 로직
+        // 티어 승급 알림 (레벨업보다 상위 개념이므로 먼저 확인)
+        if (newTier.ordinal() > oldTier.ordinal()) {
+            notificationService.createTierUpNotification(user, newTier.getName());
+        }
+        // 단순 레벨업 알림 (티어는 그대로인데 레벨만 올랐을 때)
+        else if (newLevel > oldLevel) {
+            notificationService.createLevelUpNotification(user, newLevel);
+        }
     }
 
     private int calculateLevel(int totalXp, ChessTier tier) {
@@ -112,4 +126,5 @@ public class ProfileServiceImpl implements ProfileService {
                 .links(links)
                 .build();
     }
+
 }

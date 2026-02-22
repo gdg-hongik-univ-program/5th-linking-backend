@@ -12,7 +12,7 @@ public class ProfileResponse {
     @Schema(description = "티어(계급) 이름")
     private String tierName;
 
-    @Schema(description = "티어(계급) 별 이미지 코드")
+    @Schema(description = "사용자 프로필 이미지 코드")
     private String imageCode;
 
     @Schema(description = "티어 수식어")
