@@ -49,7 +49,7 @@ public class User {
 
 
     public void updateNickName(String nickname){
-        this.nickName = nickName;
+        this.nickName = nickname;
     }
 
 
