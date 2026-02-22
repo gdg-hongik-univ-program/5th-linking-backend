@@ -65,6 +65,8 @@ public interface ItemRepository extends JpaRepository<Item, Long>{
     // UserId와 Status 조회
     List<Item> findByUser_UserIdAndStatus(Long userId, Item.ItemStatus status);
 
+    List<Item> findByUser_UserIdAndCreatedAtBetweenAndStatus(Long userId, LocalDateTime start, LocalDateTime end, Item.ItemStatus status);
+
     // 최신순으로 상위 8개만 조회 (ACTIVE 상태인 아이템만)
     List<Item> findTop8ByUser_UserIdAndStatusOrderByCreatedAtDesc(Long userId, Item.ItemStatus status);
 
