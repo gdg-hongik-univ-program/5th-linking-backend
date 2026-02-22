@@ -28,32 +28,35 @@ public class CalendarServiceImpl implements CalendarService {
      * 월별 캘린더 요약 정보 조회
      */
 
+    // CalendarServiceImpl.java
+
     @Override
     @Transactional
     public CalendarMonthResponse getCalendarMonthData(int year, int month, Long userId) {
-        // 1. 해당 월의 범위 계산
         LocalDate startLocalDate = LocalDate.of(year, month, 1);
         LocalDate endLocalDate = startLocalDate.withDayOfMonth(startLocalDate.lengthOfMonth());
+
+        // 시간 범위를 00:00:00 ~ 23:59:59.999 로 명확히 설정
         LocalDateTime startDateTime = startLocalDate.atStartOfDay();
-        LocalDateTime endDateTime = endLocalDate.atTime(23, 59, 59);
+        LocalDateTime endDateTime = endLocalDate.atTime(LocalTime.MAX);
 
-        // 2. DB에서 데이터 조회
-        List<Item> deadlineItems = itemRepository.findByUser_UserIdAndDeadlineBetweenOrderByDeadlineAsc(
-                userId, startLocalDate, endLocalDate);
-        List<Item> createdItems = itemRepository.findByUser_UserIdAndCreatedAtBetween(
-                userId, startDateTime, endDateTime);
+        // 1. ACTIVE 상태인 아이템만 조회하여 휴지통 데이터 배제
+        List<Item> deadlineItems = itemRepository.findByUser_UserIdAndDeadlineBetweenAndStatusOrderByDeadlineAsc(
+                userId, startLocalDate, endLocalDate, Item.ItemStatus.ACTIVE);
 
-        // 3. 날짜별로 데이터 집계 (TreeMap을 사용하여 날짜순 정렬)
+        List<Item> createdItems = itemRepository.findByUser_UserIdAndCreatedAtBetweenAndStatus(
+                userId, startDateTime, endDateTime, Item.ItemStatus.ACTIVE);
+
         Map<String, CalendarMonthResponse.DaySummary> summaryMap = new TreeMap<>();
 
-        // 생성일 기준 카운팅
+        // 생성일 카운팅
         for (Item item : createdItems) {
             String dateKey = item.getCreatedAt().toLocalDate().toString();
             CalendarMonthResponse.DaySummary current = summaryMap.getOrDefault(dateKey, new CalendarMonthResponse.DaySummary(0, 0));
             summaryMap.put(dateKey, new CalendarMonthResponse.DaySummary(current.getCreatedCount() + 1, current.getDeadlineCount()));
         }
 
-        // 마감일 기준 카운팅
+        // 마감일 카운팅
         for (Item item : deadlineItems) {
             String dateKey = item.getDeadline().toString();
             CalendarMonthResponse.DaySummary current = summaryMap.getOrDefault(dateKey, new CalendarMonthResponse.DaySummary(0, 0));
@@ -62,43 +65,39 @@ public class CalendarServiceImpl implements CalendarService {
 
         return new CalendarMonthResponse(year, month, summaryMap);
     }
-    /**
-     * 특정 날짜의 상세 일정 조회
-     */
 
     @Override
     @Transactional
     public CalendarDayResponse getCalendarDayData(LocalDate date, Long userId) {
-        // 1. 해당 날짜가 마감일(Deadline)인 아이템 조회
-        List<Item> deadlineItems = itemRepository.findItemsByUserIdAndDeadline(userId, date);
+        // 1. 해당 날짜가 마감일이면서 ACTIVE인 내 아이템만 조회
+        List<Item> deadlineItems = itemRepository.findByUser_UserIdAndDeadlineAndStatus(
+                userId, date, Item.ItemStatus.ACTIVE);
 
-        // 2. 해당 날짜가 생성일(CreatedAt)인 아이템 조회 (00:00:00 ~ 23:59:59)
+        // 2. 해당 날짜가 생성일이면서 ACTIVE인 내 아이템만 조회
         LocalDateTime startDateTime = date.atStartOfDay();
         LocalDateTime endDateTime = date.atTime(LocalTime.MAX);
-        List<Item> createdItems = itemRepository.findByUser_UserIdAndCreatedAtBetween(
-                userId, startDateTime, endDateTime);
+        List<Item> createdItems = itemRepository.findByUser_UserIdAndCreatedAtBetweenAndStatus(
+                userId, startDateTime, endDateTime, Item.ItemStatus.ACTIVE);
 
-        // 3. 두 리스트를 합치고 중복 제거 (ItemId 기준) 후 DTO 변환
-        // Stream.concat을 사용하여 두 리스트를 합칩니다.
+        // 3. 중복 제거 및 DTO 변환
         List<CalendarDayResponse.EventDetailDto> eventList = Stream.concat(deadlineItems.stream(), createdItems.stream())
-                .distinct() // Item 객체의 equals/hashCode가 itemId 기준이라면 중복 제거됨
+                .distinct()
                 .map(item -> CalendarDayResponse.EventDetailDto.builder()
                         .itemId(item.getItemId())
                         .title(item.getTitle())
-                        .memo(item.getMemo()) // DTO에 정의한 필드 추가
+                        .memo(item.getMemo())
                         .deadline(item.getDeadline())
                         .createdAt(item.getCreatedAt())
                         .tag(item.getItemTags() != null ?
                                 item.getItemTags().stream()
-                                        .map(itemTag -> itemTag.getTag().getTagName()) // 태그의 이름 추출
+                                        .map(it -> it.getTag().getTagName())
                                         .collect(Collectors.toList())
-                                : Collections.emptyList()) // 태그가 없으면 빈 리스트 반환
+                                : Collections.emptyList())
                         .importance(item.isImportance())
                         .imageUrl(item.getImageUrl())
                         .build())
                 .collect(Collectors.toList());
 
-        // 4. 최종 결과 반환
         return CalendarDayResponse.builder()
                 .selectedDate(date)
                 .eventList(eventList)

@@ -26,10 +26,6 @@ public interface ItemRepository extends JpaRepository<Item, Long>{
             "order by i.createdAt desc")
     List<Item> findByUser_UserIdAndStatusOrderByCreatedAtDesc(Long userId, Item.ItemStatus status);
 
-    // 마감 임박 (오늘 ~ 7일 뒤, ACTIVE 상태만)
-    List<Item> findByUser_UserIdAndDeadlineBetweenAndStatusOrderByDeadlineAsc(
-            Long userId, LocalDate start, LocalDate end, Item.ItemStatus status);
-
     // 중요 표시이면서 ACTIVE 상태인 것만 조회
     List<Item> findByUser_UserIdAndImportanceTrueAndStatus(Long userId, Item.ItemStatus status);
 
@@ -78,6 +74,16 @@ public interface ItemRepository extends JpaRepository<Item, Long>{
     // 특정 사용자의 아이템 중, deadline이 특정 기간 사이인 데이터 조회 (마감일순 정렬)
     List<Item> findByUser_UserIdAndDeadlineBetweenOrderByDeadlineAsc(
             Long userId, LocalDate start, LocalDate end);
+
+    // 캘린더 일별 조회를 위해 사용자의 특정 마감일 + ACTIVE 아이템 조회
+    List<Item> findByUser_UserIdAndDeadlineAndStatus(Long userId, LocalDate deadline, Item.ItemStatus status);
+
+    // 캘린더 일별 조회를 위해 사용자의 특정 생성일 범위 + ACTIVE 아이템 조회
+    List<Item> findByUser_UserIdAndCreatedAtBetweenAndStatus(Long userId, LocalDateTime start, LocalDateTime end, Item.ItemStatus status);
+
+    // 월별 조회를 위한 범위 조회 (Status 추가)
+    List<Item> findByUser_UserIdAndDeadlineBetweenAndStatusOrderByDeadlineAsc(
+            Long userId, LocalDate start, LocalDate end, Item.ItemStatus status);
 
 
     @Query("SELECT DISTINCT i FROM Item i " +
