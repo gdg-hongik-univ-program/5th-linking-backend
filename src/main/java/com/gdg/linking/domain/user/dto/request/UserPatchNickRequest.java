@@ -14,7 +14,7 @@ public class UserPatchNickRequest {
     private String nickName;
 
     @Schema(description = "변경할 코드", example = "PAWN")
-    private String imageCode
+    private String imageCode;
 
 }
 
