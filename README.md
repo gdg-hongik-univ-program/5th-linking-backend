@@ -1,5 +1,7 @@
 # 🔗 LINKING (링킹) - 5th-linking-backend
 
+![Title](./docs/images/Poster.png)
+
 > **저장된 링크를 효율적으로 관리하고 체계화하는 서비스, LINKING의 백엔드 리포지토리입니다.** <br>
 > 여기저기 흩어진 링크들을 폴더와 태그로 정리하고, 링크 간의 관계를 매핑하여 나만의 지식 저장소를 구축합니다.
 
@@ -17,7 +19,12 @@
   * 링크에 커스텀 태그를 부여하여 다차원적인 검색 및 필터링 지원
 * 🕸️ **링크 관계성 (Link Relationships)**
   * 연관된 링크 간의 관계(Relationship)를 매핑하여 꼬리를 무는 정보 탐색 제공
-
+* 📅 **캘린더 및 일정 관리 (Calendar Integration)**
+  * 저장된 링크를 특정 날짜나 일정과 연동하여 관리하는 기능 제공
+* 🔔 **알림 시스템 (Notification)**
+  * 사용자 맞춤형 알림 발송 및 알림 이력 관리
+* 🔍 **통합 검색 (Advanced Search)**
+  * 키워드, 태그, 폴더 등 다양한 조건을 활용한 링크 통합 검색 지원
 <br>
 
 ## 📂 Project Architecture
