@@ -31,10 +31,10 @@ public class NotificationServiceImpl implements NotificationService {
         if (deadline == null) return;
 
         // D-7, D-3, D-1, D-DAY 알림 예약
-        saveScheduled(item, deadline.minusDays(7), "7일 남았어요", "D-7");
-        saveScheduled(item, deadline.minusDays(3), "3일 남았어요", "D-3");
-        saveScheduled(item, deadline.minusDays(1), "하루 남았어요", "D-1");
-        saveScheduled(item, deadline, "오늘이에요!", "D-DAY");
+        saveScheduled(item, deadline.minusDays(7), "7일 남았어요", "UPCOMING");
+        saveScheduled(item, deadline.minusDays(3), "3일 남았어요", "UPCOMING");
+        saveScheduled(item, deadline.minusDays(1), "하루 남았어요", "UPCOMING");
+        saveScheduled(item, deadline, "오늘이에요!", "UPCOMING");
     }
 
     private void saveScheduled(Item item, LocalDate scheduledDate, String messageTag, String type) {
