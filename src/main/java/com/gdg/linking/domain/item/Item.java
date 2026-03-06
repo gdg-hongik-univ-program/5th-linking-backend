@@ -88,7 +88,7 @@ public class Item {
     private LocalDateTime updatedAt;
 
     // 썸네일 이미지 주소 저장 필드
-    @Column(name = "image_url")
+    @Column(name = "image_url", length = 1024)
     private String imageUrl;
 
     public void restore() {
